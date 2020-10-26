@@ -15,7 +15,7 @@ from eskf import (
 
 
 def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
-             p_std, N, use_GNSSaccuracy=False, doGNSS=True, debug=False):
+             p_std, N, use_GNSSaccuracy=False, doGNSS=True, debug=False, offset=0.):
 
     S_a = loaded_data["S_a"]
     S_g = loaded_data["S_g"]
@@ -73,8 +73,13 @@ def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
     NEES_accbias = np.zeros(steps)
     NEES_gyrobias = np.zeros(steps)
 
-    GNSSk: int = 0  # keep track of current step in GNSS measurements
-
+    # keep track of current step in GNSS measurements
+    GNSSk: int = np.searchsorted(timeGNSS, offset)
+    offset_idx = np.searchsorted(timeIMU, offset)
+    timeIMU = timeIMU[offset_idx:]
+    z_acceleration = z_acceleration[offset_idx:]
+    z_gyroscope = z_gyroscope[offset_idx:]
+    Ts_IMU = Ts_IMU[offset_idx:]
     k = 0
     for k in trange(N):
         if doGNSS and timeIMU[k] >= timeGNSS[GNSSk]:

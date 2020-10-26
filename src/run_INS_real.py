@@ -66,7 +66,7 @@ cont_rate_bias_driving_noise_std = (
 
 
 # Position and velocity measurement
-p_std = np.array([0.3, 0.3, 0.5])  # Measurement noise
+p_std = np.array([0.3, 0.3, 0.5]) / 2.5  # Measurement noise
 
 
 p_acc = 1e-16
@@ -110,7 +110,7 @@ init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
 
-N: int = timeIMU.size//10
+N: int = timeIMU.size//50
 doGNSS: bool = True
 # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
 
@@ -149,7 +149,7 @@ extra_args = [eskf_parameters] + [x_pred_init] + [loaded_data, p_std, N]
     NEES_accbias,
     NEES_gyrobias,
     GNSSk) = run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
-                      p_std, N, use_GNSSaccuracy=True, doGNSS=doGNSS)
+                      p_std, N, use_GNSSaccuracy=True, doGNSS=doGNSS, offset=210)
 
 
 t = np.linspace(0, dt * (N - 1), N)
