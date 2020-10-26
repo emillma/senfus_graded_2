@@ -12,6 +12,7 @@ import os
 import pickle
 from zlib import adler32
 from plotter import plot_traj, plot_estimate
+from run_eskf import run_eskf
 # try:  # see if tqdm is available, otherwise define it as a dummy
 #     try:  # Ipython seem to require different tqdm.. try..except seem to be the easiest way to check
 #         __IPYTHON__
@@ -53,21 +54,19 @@ filename_to_load = f"{folder}/../data/task_simulation.mat"
 cache_folder = os.path.join(folder, '..', 'cache')
 loaded_data = scipy.io.loadmat(filename_to_load)
 
-S_a = loaded_data["S_a"]
-S_g = loaded_data["S_g"]
-lever_arm = loaded_data["leverarm"].ravel()
-timeGNSS = loaded_data["timeGNSS"].ravel()
+# S_a = loaded_data["S_a"]
+# S_g = loaded_data["S_g"]
+# lever_arm = loaded_data["leverarm"].ravel()
+# timeGNSS = loaded_data["timeGNSS"].ravel()
 timeIMU = loaded_data["timeIMU"].ravel()
-x_true = loaded_data["xtrue"].T
-z_acceleration = loaded_data["zAcc"].T
-z_GNSS = loaded_data["zGNSS"].T
-z_gyroscope = loaded_data["zGyro"].T
-
-Ts_IMU = [0, *np.diff(timeIMU)]
-
+# x_true = loaded_data["xtrue"].T
+# z_acceleration = loaded_data["zAcc"].T
+# z_GNSS = loaded_data["zGNSS"].T
+# z_gyroscope = loaded_data["zGyro"].T
+# Ts_IMU = [0, *np.diff(timeIMU)]
 dt = np.mean(np.diff(timeIMU))
-steps = len(z_acceleration)
-gnss_steps = len(z_GNSS)
+# steps = len(z_acceleration)
+# gnss_steps = len(z_GNSS)
 
 # %% Measurement noise
 # IMU noise values for STIM300, based on datasheet and simulation sample rate
@@ -104,118 +103,66 @@ eskf_parameters = [acc_std,
                    cont_rate_bias_driving_noise_std,
                    p_acc,
                    p_gyro]
-# %% Estimator
-eskf = ESKF(
-    *eskf_parameters,
-    S_a=S_a,  # set the accelerometer correction matrix
-    S_g=S_g,  # set the gyro correction matrix,
-    debug=True  # TODO: False to avoid expensive debug checks, can also be suppressed by calling 'python -O run_INS_simulated.py'
-)
-
-# %% Allocate
-x_est = np.zeros((steps, 16))
-P_est = np.zeros((steps, 15, 15))
-
-x_pred = np.zeros((steps, 16))
-P_pred = np.zeros((steps, 15, 15))
-
-delta_x = np.zeros((steps, 15))
-
-NIS = np.zeros(gnss_steps)
-
-NEES_all = np.zeros(steps)
-NEES_pos = np.zeros(steps)
-NEES_vel = np.zeros(steps)
-NEES_att = np.zeros(steps)
-NEES_accbias = np.zeros(steps)
-NEES_gyrobias = np.zeros(steps)
 
 # %% Initialise
-x_pred[0, POS_IDX] = np.array([0, 0, -5])  # starting 5 metres above ground
-x_pred[0, VEL_IDX] = np.array([20, 0, 0])  # starting at 20 m/s due north
+x_pred_init = np.zeros(16)
+x_pred_init[POS_IDX] = np.array([0, 0, -5])  # starting 5 metres above ground
+x_pred_init[VEL_IDX] = np.array([20, 0, 0])  # starting at 20 m/s due north
 # no initial rotation: nose to North, right to East, and belly down
-x_pred[0, 6] = 1
+x_pred_init[6] = 1
 
 # These have to be set reasonably to get good results
-P_pred[0][POS_IDX ** 2] = 10**2 * np.eye(3)
-P_pred[0][VEL_IDX ** 2] = 10**2 * np.eye(3)
-P_pred[0][ERR_ATT_IDX ** 2] = np.eye(3)
-P_pred[0][ERR_ACC_BIAS_IDX ** 2] = 0.01 * np.eye(3)
-P_pred[0][ERR_GYRO_BIAS_IDX ** 2] = 0.01 * np.eye(3)
+P_pred_init = np.zeros((15, 15))
+P_pred_init[POS_IDX ** 2] = 10**2 * np.eye(3)
+P_pred_init[VEL_IDX ** 2] = 10**2 * np.eye(3)
+P_pred_init[ERR_ATT_IDX ** 2] = np.eye(3)
+P_pred_init[ERR_ACC_BIAS_IDX ** 2] = 0.01 * np.eye(3)
+P_pred_init[ERR_GYRO_BIAS_IDX ** 2] = 0.01 * np.eye(3)
 
-init_sparameters = [x_pred[0], P_pred[0]]
+init_parameters = [x_pred_init, P_pred_init]
 
 # %% Run estimation
 # run this file with 'python -O run_INS_simulated.py' to turn of assertions and get about 8/5 speed increase for longer runs
 
 N: int = 5000
-# TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
 doGNSS: bool = True
-GNSSk: int = 0  # keep track of current step in GNSS measurements
+# TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
 
 use_cache = True
-parameters = eskf_parameters + init_sparameters
+parameters = eskf_parameters + init_parameters
 parameter_hash = str(adler32(str(parameters + [N, doGNSS]).encode()))
-if parameter_hash not in os.listdir(cache_folder) or not use_cache:
-    for k in tqdm.trange(N):
-        if doGNSS and timeIMU[k] >= timeGNSS[GNSSk]:
-            NIS[GNSSk] = eskf.NIS_GNSS_position(
-                x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
+# if parameter_hash not in os.listdir(cache_folder) or not use_cache:
 
-            x_est[k], P_est[k] = eskf.update_GNSS_position(
-                x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
-            assert np.all(np.isfinite(P_est[k])
-                          ), f"Not finite P_pred at index {k}"
 
-            GNSSk += 1
-        else:
-            # no updates, so let us take estimate = prediction
-            x_est[k] = x_pred[k]
-            P_est[k] = P_pred[k]
-
-        delta_x[k] = eskf.delta_x(x_est[k], x_true[k])
-        (
-            NEES_all[k],
-            NEES_pos[k],
-            NEES_vel[k],
-            NEES_att[k],
-            NEES_accbias[k],
-            NEES_gyrobias[k],
-        ) = eskf.NEESes(x_est[k], P_est[k], x_true[k])
-
-        if k < N - 1:
-            x_pred[k + 1], P_pred[k + 1] = eskf.predict(
-                x_est[k], P_est[k], z_acceleration[k+1], z_gyroscope[k+1], Ts_IMU[k+1])
-
-        if eskf.debug:
-            assert np.all(np.isfinite(P_pred[k])
-                          ), f"Not finite P_pred at index {k + 1}"
-    result = (x_pred,
-              x_est,
-              P_est,
-              NEES_all,
-              NEES_pos,
-              NEES_vel,
-              NEES_att,
-              NEES_accbias,
-              NEES_gyrobias,
-              k)
-    if use_cache:
-        with open(os.path.join(cache_folder, parameter_hash), 'wb') as file:
-            pickle.dump(result, file)
-else:
-    with open(os.path.join(cache_folder, parameter_hash), 'rb') as file:
-        (x_pred,
-         x_est,
-         P_est,
-         NEES_all,
-         NEES_pos,
-         NEES_vel,
-         NEES_att,
-         NEES_accbias,
-         NEES_gyrobias,
-         k) = pickle.load(file)
+#     if use_cache:
+#         with open(os.path.join(cache_folder, parameter_hash), 'wb') as file:
+#             pickle.dump(result, file)
+# else:
+#     with open(os.path.join(cache_folder, parameter_hash), 'rb') as file:
+#         (x_pred,
+#          x_est,
+#          P_est,
+#          NEES_all,
+#          NEES_pos,
+#          NEES_vel,
+#          NEES_att,
+#          NEES_accbias,
+#          NEES_gyrobias,
+#          k) = pickle.load(file)
 # %% plotting
+(x_pred,
+    x_est,
+    P_est,
+    NEES_all,
+    NEES_pos,
+    NEES_vel,
+    NEES_att,
+    NEES_accbias,
+    NEES_gyrobias,
+    GNSSk) = run_eskf(eskf_parameters, init_parameters, loaded_data,
+                      R_GNSS, N)
+
+
 dosavefigures = False
 doplothandout = False
 
