@@ -66,7 +66,7 @@ cont_rate_bias_driving_noise_std = (
 
 
 # Position and velocity measurement
-p_std = np.array([0.3, 0.3, 0.5])   # Measurement noise
+p_std = np.array([0.3, 0.3, 0.5]) / 2.5  # Measurement noise
 
 
 p_acc = 1e-16
@@ -127,7 +127,7 @@ def cost_function(x, *args):
     print(x)
     eskf_parameters, x_init, loaded_data, p_std, N = args
     result = run_eskf(eskf_parameters, x_init, P_pred_init_list, loaded_data,
-                      p_std, N)
+                      p_std, N, offset=200, use_GNSSaccuracy=True)
     delta_x = result[3]
     rmse = np.sqrt(np.mean(np.sum(delta_x[:N, :3]**2, axis=1)))
     print(f'RMSE: {rmse}\n')
@@ -150,7 +150,7 @@ extra_args = [eskf_parameters] + [x_pred_init] + [loaded_data, p_std, N]
     NEES_accbias,
     NEES_gyrobias,
     GNSSk) = run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
-                      p_std, N, use_GNSSaccuracy=False, doGNSS=doGNSS, offset=200)
+                      p_std, N, use_GNSSaccuracy=True, doGNSS=doGNSS, offset=200)
 
 
 t = np.linspace(0, dt * (N - 1), N)

@@ -85,13 +85,14 @@ def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
     for k in trange(N):
         if doGNSS and timeIMU[k] >= timeGNSS[GNSSk]:
             if use_GNSSaccuracy:
-                R_GNSS = R_GNSS * GNSSaccuracy[GNSSk]
-
+                R_GNSS_scaled = R_GNSS * GNSSaccuracy[GNSSk]
+            else:
+                R_GNSS_scaled = R_GNSS
             NIS[GNSSk] = eskf.NIS_GNSS_position(
-                x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
+                x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS_scaled, lever_arm)
 
             x_est[k], P_est[k] = eskf.update_GNSS_position(
-                x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
+                x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS_scaled, lever_arm)
             assert np.all(np.isfinite(P_est[k])
                           ), f"Not finite P_pred at index {k}"
 
