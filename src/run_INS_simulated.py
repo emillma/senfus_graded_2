@@ -11,6 +11,7 @@ import numpy as np
 import tqdm
 import os
 import pickle
+import time
 from zlib import adler32
 from plotter import plot_traj, plot_estimate, state_error_plots
 from eskf_runner import run_eskf
@@ -55,19 +56,11 @@ filename_to_load = f"{folder}/../data/task_simulation.mat"
 cache_folder = os.path.join(folder, '..', 'cache')
 loaded_data = scipy.io.loadmat(filename_to_load)
 
-# S_a = loaded_data["S_a"]
-# S_g = loaded_data["S_g"]
-# lever_arm = loaded_data["leverarm"].ravel()
-# timeGNSS = loaded_data["timeGNSS"].ravel()
 timeIMU = loaded_data["timeIMU"].ravel()
 x_true = loaded_data["xtrue"].T
-# z_acceleration = loaded_data["zAcc"].T
 z_GNSS = loaded_data["zGNSS"].T
-# z_gyroscope = loaded_data["zGyro"].T
-# Ts_IMU = [0, *np.diff(timeIMU)]
 dt = np.mean(np.diff(timeIMU))
-# steps = len(z_acceleration)
-# gnss_steps = len(z_GNSS)
+
 
 # %% Measurement noise
 # IMU noise values for STIM300, based on datasheet and simulation sample rate
@@ -98,13 +91,14 @@ R_GNSS = np.diag(p_std ** 2)
 
 p_acc = 1e-16
 p_gyro = 1e-16
+# [-2.71073648e-02  1.97296299e-04 -7.88136014e-04  5.62588030e-05
+#  -7.26577980e-04  1.43524292e-01]
 eskf_parameters = [acc_std,
                    rate_std,
                    cont_acc_bias_driving_noise_std,
                    cont_rate_bias_driving_noise_std,
                    p_acc,
                    p_gyro]
-
 # %% Initialise
 x_pred_init = np.zeros(16)
 x_pred_init[POS_IDX] = np.array([0, 0, -5])  # starting 5 metres above ground
@@ -113,58 +107,50 @@ x_pred_init[VEL_IDX] = np.array([20, 0, 0])  # starting at 20 m/s due north
 x_pred_init[6] = 1
 
 # These have to be set reasonably to get good results
-P_pred_init = np.zeros((15, 15))
-P_pred_init[POS_IDX ** 2] = 10**2 * np.eye(3)
-P_pred_init[VEL_IDX ** 2] = 10**2 * np.eye(3)
-P_pred_init[ERR_ATT_IDX ** 2] = np.eye(3)
-P_pred_init[ERR_ACC_BIAS_IDX ** 2] = 0.01 * np.eye(3)
-P_pred_init[ERR_GYRO_BIAS_IDX ** 2] = 0.01 * np.eye(3)
 
-init_parameters = [x_pred_init, P_pred_init]
+P_pred_init_pos = 10**2
+P_pred_init_vel = 10**2
+P_pred_init_err_att = 1**2
+P_pred_init_err_acc_bias = 0.1**2
+P_pred_init_err_gyro_bias = 0.1**2
+P_pred_init_list = [P_pred_init_pos,
+                    P_pred_init_vel,
+                    P_pred_init_err_att,
+                    P_pred_init_err_acc_bias,
+                    P_pred_init_err_gyro_bias]
+
+
+init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
-# run this file with 'python -O run_INS_simulated.py' to turn of assertions and get about 8/5 speed increase for longer runs
 
 N: int = 5000
 doGNSS: bool = True
 # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
 
+
 use_cache = True
 parameters = eskf_parameters + init_parameters
 parameter_hash = str(adler32(str(parameters + [N, doGNSS]).encode()))
-# if parameter_hash not in os.listdir(cache_folder) or not use_cache:
-
-
-#     if use_cache:
-#         with open(os.path.join(cache_folder, parameter_hash), 'wb') as file:
-#             pickle.dump(result, file)
-# else:
-#     with open(os.path.join(cache_folder, parameter_hash), 'rb') as file:
-#         (x_pred,
-#          x_est,
-#          P_est,
-#          NEES_all,
-#          NEES_pos,
-#          NEES_vel,
-#          NEES_att,
-#          NEES_accbias,
-#          NEES_gyrobias,
-#          k) = pickle.load(file)
 # %% plotting
+
+
 def cost_function(x, *args):
-    eskf_parameters = x
+    P_pred_init_list = x
+
     print(x)
-    init_parameters, loaded_data, R_GNSS, N = args
-    result = run_eskf(eskf_parameters, init_parameters, loaded_data,
+    eskf_parameters, x_init, loaded_data, R_GNSS, N = args
+    result = run_eskf(eskf_parameters, x_init, P_pred_init_list, loaded_data,
                       R_GNSS, N)
     delta_x = result[3]
     rmse = np.sqrt(np.mean(np.sum(delta_x[:N, :3]**2, axis=1)))
-    print(rmse)
+    print(f'RMSE: {rmse}\n')
+    time.sleep(0.2)
     return rmse
 
 
-initial_guess = eskf_parameters
-extra_args = [init_parameters] + [loaded_data, R_GNSS, N]
+initial_guess = P_pred_init_list
+extra_args = [eskf_parameters] + [x_pred_init] + [loaded_data, R_GNSS, N]
 minimize(cost_function, initial_guess, tuple(extra_args))
 (x_pred,
     x_est,
@@ -176,12 +162,9 @@ minimize(cost_function, initial_guess, tuple(extra_args))
     NEES_att,
     NEES_accbias,
     NEES_gyrobias,
-    GNSSk) = run_eskf(eskf_parameters, init_parameters, loaded_data,
-                      R_GNSS, N)
+    GNSSk) = run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
+                      R_GNSS, N, doGNSS)
 
-
-dosavefigures = False
-doplothandout = False
 
 t = np.linspace(0, dt * (N - 1), N)
 plot_traj(N, GNSSk, x_est, x_true, z_GNSS)

@@ -1,14 +1,21 @@
 import numpy as np
-import tqdm
-from eskf import ESKF
+from tqdm import trange
+from tqdm import tqdm_notebook
+from eskf import (
+    ESKF,
+    POS_IDX,
+    VEL_IDX,
+    ATT_IDX,
+    ACC_BIAS_IDX,
+    GYRO_BIAS_IDX,
+    ERR_ATT_IDX,
+    ERR_ACC_BIAS_IDX,
+    ERR_GYRO_BIAS_IDX,
+)
 
 
-def run_eskf(eskf_parameters, init_parameters, loaded_data,
+def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
              R_GNSS, N, doGNSS=True, debug=False):
-
-    (x_pred_init,
-     P_pred_init
-     ) = init_parameters
 
     S_a = loaded_data["S_a"]
     S_g = loaded_data["S_g"]
@@ -31,6 +38,14 @@ def run_eskf(eskf_parameters, init_parameters, loaded_data,
     x_pred = np.zeros((steps, 16))
     x_pred[0] = x_pred_init
     P_pred = np.zeros((steps, 15, 15))
+
+    P_pred_init = np.zeros(15)
+    P_pred_init[POS_IDX] = P_pred_init_list[0]
+    P_pred_init[VEL_IDX] = P_pred_init_list[1]
+    P_pred_init[ERR_ATT_IDX] = P_pred_init_list[2]
+    P_pred_init[ERR_ACC_BIAS_IDX] = P_pred_init_list[3]
+    P_pred_init[ERR_GYRO_BIAS_IDX] = P_pred_init_list[4]
+    P_pred_init = np.diag(P_pred_init)
     P_pred[0] = P_pred_init
 
     NIS = np.zeros(gnss_steps)
@@ -50,7 +65,7 @@ def run_eskf(eskf_parameters, init_parameters, loaded_data,
     GNSSk: int = 0  # keep track of current step in GNSS measurements
 
     k = 0
-    for k in tqdm.trange(N):
+    for k in trange(N):
         if doGNSS and timeIMU[k] >= timeGNSS[GNSSk]:
             NIS[GNSSk] = eskf.NIS_GNSS_position(
                 x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
