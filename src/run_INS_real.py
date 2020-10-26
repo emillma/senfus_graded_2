@@ -142,6 +142,7 @@ extra_args = [eskf_parameters] + [x_pred_init] + [loaded_data, p_std, N]
     x_est,
     P_est,
     delta_x,
+    NIS,
     NEES_all,
     NEES_pos,
     NEES_vel,
