@@ -1,4 +1,5 @@
 # %% imports
+from scipy.optimize import minimize
 import scipy
 import scipy.io
 import scipy.stats
@@ -11,8 +12,8 @@ import tqdm
 import os
 import pickle
 from zlib import adler32
-from plotter import plot_traj, plot_estimate
-from run_eskf import run_eskf
+from plotter import plot_traj, plot_estimate, state_error_plots
+from eskf_runner import run_eskf
 # try:  # see if tqdm is available, otherwise define it as a dummy
 #     try:  # Ipython seem to require different tqdm.. try..except seem to be the easiest way to check
 #         __IPYTHON__
@@ -59,9 +60,9 @@ loaded_data = scipy.io.loadmat(filename_to_load)
 # lever_arm = loaded_data["leverarm"].ravel()
 # timeGNSS = loaded_data["timeGNSS"].ravel()
 timeIMU = loaded_data["timeIMU"].ravel()
-# x_true = loaded_data["xtrue"].T
+x_true = loaded_data["xtrue"].T
 # z_acceleration = loaded_data["zAcc"].T
-# z_GNSS = loaded_data["zGNSS"].T
+z_GNSS = loaded_data["zGNSS"].T
 # z_gyroscope = loaded_data["zGyro"].T
 # Ts_IMU = [0, *np.diff(timeIMU)]
 dt = np.mean(np.diff(timeIMU))
@@ -150,9 +151,25 @@ parameter_hash = str(adler32(str(parameters + [N, doGNSS]).encode()))
 #          NEES_gyrobias,
 #          k) = pickle.load(file)
 # %% plotting
+def cost_function(x, *args):
+    eskf_parameters = x
+    print(x)
+    init_parameters, loaded_data, R_GNSS, N = args
+    result = run_eskf(eskf_parameters, init_parameters, loaded_data,
+                      R_GNSS, N)
+    delta_x = result[3]
+    rmse = np.sqrt(np.mean(np.sum(delta_x[:N, :3]**2, axis=1)))
+    print(rmse)
+    return rmse
+
+
+initial_guess = eskf_parameters
+extra_args = [init_parameters] + [loaded_data, R_GNSS, N]
+minimize(cost_function, initial_guess, tuple(extra_args))
 (x_pred,
     x_est,
     P_est,
+    delta_x,
     NEES_all,
     NEES_pos,
     NEES_vel,
@@ -169,4 +186,5 @@ doplothandout = False
 t = np.linspace(0, dt * (N - 1), N)
 plot_traj(N, GNSSk, x_est, x_true, z_GNSS)
 plot_estimate(t, N, x_est)
+state_error_plots(t, N, x_est, x_true, delta_x)
 plt.show()
