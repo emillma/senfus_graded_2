@@ -4,42 +4,17 @@ import scipy
 import scipy.io
 import scipy.stats
 
-import matplotlib
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-import tqdm
 import os
-import pickle
 import time
 from zlib import adler32
-from plotter import plot_traj, plot_estimate, state_error_plots
+from plotter import plot_path, plot_estimate, state_error_plots
 from eskf_runner import run_eskf
-# try:  # see if tqdm is available, otherwise define it as a dummy
-#     try:  # Ipython seem to require different tqdm.. try..except seem to be the easiest way to check
-#         __IPYTHON__
-#         import tqdm
-#     except:
-#         import tqdm
-# except Exception as e:
-#     print(e)S
-#     print(
-#         "install tqdm (conda install tqdm, or pip install tqdm) to get nice progress bars. "
-#     )
-
-#     def tqdm(iterable, *args, **kwargs):
-#         return iterable
 
 from eskf import (
-    ESKF,
     POS_IDX,
     VEL_IDX,
-    ATT_IDX,
-    ACC_BIAS_IDX,
-    GYRO_BIAS_IDX,
-    ERR_ATT_IDX,
-    ERR_ACC_BIAS_IDX,
-    ERR_GYRO_BIAS_IDX,
 )
 
 from quaternion import quaternion_to_euler
@@ -52,12 +27,16 @@ setup_plot()
 
 # %% load data and plot
 folder = os.path.dirname(__file__)
+# filename_to_load = f"{folder}/../data/task_simulation.mat"
 filename_to_load = f"{folder}/../data/task_simulation.mat"
 cache_folder = os.path.join(folder, '..', 'cache')
 loaded_data = scipy.io.loadmat(filename_to_load)
 
 timeIMU = loaded_data["timeIMU"].ravel()
-x_true = loaded_data["xtrue"].T
+if 'xtrue' in loaded_data:
+    x_true = loaded_data["xtrue"].T
+else:
+    x_true = None
 z_GNSS = loaded_data["zGNSS"].T
 dt = np.mean(np.diff(timeIMU))
 
@@ -87,7 +66,6 @@ cont_rate_bias_driving_noise_std = (
 
 # Position and velocity measurement
 p_std = np.array([0.3, 0.3, 0.5])  # Measurement noise
-R_GNSS = np.diag(p_std ** 2)
 
 p_acc = 1e-16
 p_gyro = 1e-16
@@ -108,11 +86,12 @@ x_pred_init[6] = 1
 
 # These have to be set reasonably to get good results
 
-P_pred_init_pos = 10**2
-P_pred_init_vel = 10**2
-P_pred_init_err_att = 1**2
-P_pred_init_err_acc_bias = 0.1**2
-P_pred_init_err_gyro_bias = 0.1**2
+# [241.94198986 319.04325528   2.06011741   0.77419239   0.53211694] best result so far with simplex
+P_pred_init_pos = 10
+P_pred_init_vel = 10
+P_pred_init_err_att = 1
+P_pred_init_err_acc_bias = 0.1
+P_pred_init_err_gyro_bias = 0.1
 P_pred_init_list = [P_pred_init_pos,
                     P_pred_init_vel,
                     P_pred_init_err_att,
@@ -139,9 +118,9 @@ def cost_function(x, *args):
     P_pred_init_list = x
 
     print(x)
-    eskf_parameters, x_init, loaded_data, R_GNSS, N = args
+    eskf_parameters, x_init, loaded_data, p_std, N = args
     result = run_eskf(eskf_parameters, x_init, P_pred_init_list, loaded_data,
-                      R_GNSS, N)
+                      p_std, N)
     delta_x = result[3]
     rmse = np.sqrt(np.mean(np.sum(delta_x[:N, :3]**2, axis=1)))
     print(f'RMSE: {rmse}\n')
@@ -150,8 +129,8 @@ def cost_function(x, *args):
 
 
 initial_guess = P_pred_init_list
-extra_args = [eskf_parameters] + [x_pred_init] + [loaded_data, R_GNSS, N]
-minimize(cost_function, initial_guess, tuple(extra_args))
+extra_args = [eskf_parameters] + [x_pred_init] + [loaded_data, p_std, N]
+# minimize(cost_function, initial_guess, tuple(extra_args))
 (x_pred,
     x_est,
     P_est,
@@ -163,11 +142,11 @@ minimize(cost_function, initial_guess, tuple(extra_args))
     NEES_accbias,
     NEES_gyrobias,
     GNSSk) = run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
-                      R_GNSS, N, doGNSS)
+                      p_std, N, doGNSS=doGNSS)
 
 
 t = np.linspace(0, dt * (N - 1), N)
-plot_traj(N, GNSSk, x_est, x_true, z_GNSS)
+plot_path(N, GNSSk, x_est, z_GNSS, x_true)
 plot_estimate(t, N, x_est)
 state_error_plots(t, N, x_est, x_true, delta_x)
 plt.show()

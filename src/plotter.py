@@ -14,13 +14,14 @@ ERR_ACC_BIAS_IDX = CatSlice(start=9, stop=12)
 ERR_GYRO_BIAS_IDX = CatSlice(start=12, stop=15)
 
 
-def plot_traj(N, GNSSk, x_est, x_true, z_GNSS):
+def plot_path(N, GNSSk, x_est, z_GNSS, x_true=None):
     # 3d position plot
     fig1 = plt.figure(1)
     ax = fig1.add_subplot(1, 1, 1, projection='3d')
 
     ax.plot3D(x_est[:N, 1], x_est[:N, 0], -x_est[:N, 2])
-    ax.plot3D(x_true[:N, 1], x_true[:N, 0], -x_true[:N, 2])
+    if x_true is not None:
+        ax.plot3D(x_true[:N, 1], x_true[:N, 0], -x_true[:N, 2], c='k')
 
     ax.scatter3D(z_GNSS[:GNSSk, 1], z_GNSS[:GNSSk, 0], -z_GNSS[:GNSSk, 2])
     ax.set_xlabel("East [m]")
@@ -65,6 +66,9 @@ def plot_estimate(t, N, x_est):
 
 
 def state_error_plots(t, N, x_est, x_true, delta_x):
+    if x_true is None:
+        print('coud not plot error as xtrue is None')
+        return
     fig3, axs3 = plt.subplots(5, 1, num=3, clear=True)
     eul = np.apply_along_axis(quaternion_to_euler, 1, x_est[:N, ATT_IDX])
     eul_true = np.apply_along_axis(quaternion_to_euler, 1, x_true[:N, ATT_IDX])

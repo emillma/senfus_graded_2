@@ -15,58 +15,72 @@ from eskf import (
 
 
 def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
-             R_GNSS, N, doGNSS=True, debug=False):
+             p_std, N, use_GNSSaccuracy=False, doGNSS=True, debug=False):
 
     S_a = loaded_data["S_a"]
     S_g = loaded_data["S_g"]
     lever_arm = loaded_data["leverarm"].ravel()
     timeGNSS = loaded_data["timeGNSS"].ravel()
     timeIMU = loaded_data["timeIMU"].ravel()
-    x_true = loaded_data["xtrue"].T
+    if 'xtrue' in loaded_data:
+        x_true = loaded_data["xtrue"].T
+    else:
+        x_true = None
     z_acceleration = loaded_data["zAcc"].T
     z_GNSS = loaded_data["zGNSS"].T
     z_gyroscope = loaded_data["zGyro"].T
+
+    if use_GNSSaccuracy:
+        GNSSaccuracy = loaded_data['GNSSaccuracy'].T
+    else:
+        GNSSaccuracy = None
+
     Ts_IMU = [0, *np.diff(timeIMU)]
 
     steps = len(z_acceleration)
     gnss_steps = len(z_GNSS)
 
-    delta_x = np.zeros((steps, 15))
-    x_est = np.zeros((steps, 16))
-    P_est = np.zeros((steps, 15, 15))
-
     x_pred = np.zeros((steps, 16))
     x_pred[0] = x_pred_init
-    P_pred = np.zeros((steps, 15, 15))
 
     P_pred_init = np.zeros(15)
-    P_pred_init[POS_IDX] = P_pred_init_list[0]
-    P_pred_init[VEL_IDX] = P_pred_init_list[1]
-    P_pred_init[ERR_ATT_IDX] = P_pred_init_list[2]
-    P_pred_init[ERR_ACC_BIAS_IDX] = P_pred_init_list[3]
-    P_pred_init[ERR_GYRO_BIAS_IDX] = P_pred_init_list[4]
+    P_pred_init[POS_IDX] = P_pred_init_list[0]**2
+    P_pred_init[VEL_IDX] = P_pred_init_list[1]**2
+    P_pred_init[ERR_ATT_IDX] = P_pred_init_list[2]**2
+    P_pred_init[ERR_ACC_BIAS_IDX] = P_pred_init_list[3]**2
+    P_pred_init[ERR_GYRO_BIAS_IDX] = P_pred_init_list[4]**2
     P_pred_init = np.diag(P_pred_init)
+    P_pred = np.zeros((steps, 15, 15))
     P_pred[0] = P_pred_init
 
-    NIS = np.zeros(gnss_steps)
-    NEES_all = np.zeros(steps)
-    NEES_pos = np.zeros(steps)
-    NEES_vel = np.zeros(steps)
-    NEES_att = np.zeros(steps)
-    NEES_accbias = np.zeros(steps)
-    NEES_gyrobias = np.zeros(steps)
     eskf = ESKF(
         *eskf_parameters,
         S_a=S_a,  # set the accelerometer correction matrix
         S_g=S_g,  # set the gyro correction matrix,
         debug=False
     )
+    R_GNSS = np.diag(p_std ** 2)
+
+    x_est = np.zeros((steps, 16))
+    P_est = np.zeros((steps, 15, 15))
+
+    NIS = np.zeros(gnss_steps)
+    delta_x = np.zeros((steps, 15))
+    NEES_all = np.zeros(steps)
+    NEES_pos = np.zeros(steps)
+    NEES_vel = np.zeros(steps)
+    NEES_att = np.zeros(steps)
+    NEES_accbias = np.zeros(steps)
+    NEES_gyrobias = np.zeros(steps)
 
     GNSSk: int = 0  # keep track of current step in GNSS measurements
 
     k = 0
     for k in trange(N):
         if doGNSS and timeIMU[k] >= timeGNSS[GNSSk]:
+            if use_GNSSaccuracy:
+                R_GNSS = R_GNSS * GNSSaccuracy[GNSSk]
+
             NIS[GNSSk] = eskf.NIS_GNSS_position(
                 x_pred[k], P_pred[k], z_GNSS[GNSSk], R_GNSS, lever_arm)
 
@@ -80,16 +94,16 @@ def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
             # no updates, so let us take estimate = prediction
             x_est[k] = x_pred[k]
             P_est[k] = P_pred[k]
-
-        delta_x[k] = eskf.delta_x(x_est[k], x_true[k])
-        (
-            NEES_all[k],
-            NEES_pos[k],
-            NEES_vel[k],
-            NEES_att[k],
-            NEES_accbias[k],
-            NEES_gyrobias[k],
-        ) = eskf.NEESes(x_est[k], P_est[k], x_true[k])
+        if x_true is not None:
+            delta_x[k] = eskf.delta_x(x_est[k], x_true[k])
+            (
+                NEES_all[k],
+                NEES_pos[k],
+                NEES_vel[k],
+                NEES_att[k],
+                NEES_accbias[k],
+                NEES_gyrobias[k],
+            ) = eskf.NEESes(x_est[k], P_est[k], x_true[k])
 
         if k < N - 1:
             x_pred[k + 1], P_pred[k + 1] = eskf.predict(
