@@ -74,6 +74,7 @@ def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
     NEES_gyrobias = np.zeros(steps)
 
     # keep track of current step in GNSS measurements
+    offset += timeIMU[0]
     GNSSk: int = np.searchsorted(timeGNSS, offset)
     offset_idx = np.searchsorted(timeIMU, offset)
     timeIMU = timeIMU[offset_idx:]
