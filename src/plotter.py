@@ -33,7 +33,7 @@ def plot_traj(N, GNSSk, x_est, x_true, z_GNSS):
     # state estimation
 
 
-def plot_what(t, N, x_est, x_true):
+def plot_estimate(t, N, x_est):
     fig2, axs2 = plt.subplots(5, 1, num=2, clear=True)
 
     eul = np.apply_along_axis(quaternion_to_euler, 1, x_est[:N, ATT_IDX])
