@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
-import pickle
-
 try:  # see if tqdm is available, otherwise define it as a dummy
     try:  # Ipython seem to require different tqdm.. try..except seem to be the easiest way to check
         __IPYTHON__
@@ -224,41 +222,6 @@ for k in tqdm.trange(N):
         assert np.all(np.isfinite(P_pred[k])
                       ), f"Not finite P_pred at index {k + 1}"
 
-
-# pickle results
-data = dict(
-    cont_gyro_noise_std=cont_gyro_noise_std,
-    cont_acc_noise_std=cont_acc_noise_std,
-    rate_std=rate_std,
-    acc_std=acc_std,
-    rate_bias_driving_noise_std=rate_bias_driving_noise_std,
-    cont_rate_bias_driving_noise_std=cont_rate_bias_driving_noise_std,
-    acc_bias_driving_noise_std=acc_bias_driving_noise_std,
-    cont_acc_bias_driving_noise_std=cont_acc_bias_driving_noise_std,
-    p_std=p_std,
-    R_GNSS=R_GNSS,
-    p_acc=p_acc,
-    p_gyro=p_gyro,
-    dt=dt,
-    steps=steps,
-    x_true=x_true,
-    z_GNSS=z_GNSS,
-    N=N,
-    GNSSk=GNSSk,
-    doGNSS=doGNSS,
-    delta_x=delta_x,
-    x_est=x_est,
-    P_est=P_est,
-    x_pred=x_pred,
-    P_pred=P_pred,
-    NIS=NIS,
-    NEES_all=NEES_all,
-    NEES_pos=NEES_pos,
-    NEES_vel=NEES_vel,
-    NEES_att=NEES_att,
-    NEES_accbias=NEES_accbias,
-    NEES_gyrobias=NEES_gyrobias)
-pickle.dump(data, open(f"results/simulated_{N}.pickle", "wb"))
 
 # %% plotting
 dosavefigures = False
