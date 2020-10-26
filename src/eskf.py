@@ -23,7 +23,6 @@ VEL_IDX = CatSlice(start=3, stop=6)
 ATT_IDX = CatSlice(start=6, stop=10)
 ACC_BIAS_IDX = CatSlice(start=10, stop=13)
 GYRO_BIAS_IDX = CatSlice(start=13, stop=16)
-
 ERR_ATT_IDX = CatSlice(start=6, stop=9)
 ERR_ACC_BIAS_IDX = CatSlice(start=9, stop=12)
 ERR_GYRO_BIAS_IDX = CatSlice(start=12, stop=15)
