@@ -18,9 +18,6 @@ from eskf import (
     ATT_IDX,
 )
 
-from quaternion import quaternion_to_euler
-from cat_slice import CatSlice
-
 # %% plot config check and style setup
 
 from plott_setup import setup_plot
@@ -52,21 +49,26 @@ cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
 # Discrete sample noise at simulation rate used
 # Hvorfor gange med en halv? (eq. 10.70)
 acc_std = 0.5 * cont_acc_noise_std * np.sqrt(1 / dt)
+acc_std = 2.14592400e-02
 rate_std = 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
+rate_std = 1.30372004e-01
 
 # Bias values
 acc_bias_driving_noise_std = 4e-3
 cont_acc_bias_driving_noise_std = 6 * \
     acc_bias_driving_noise_std / np.sqrt(1 / dt)
+cont_acc_bias_driving_noise_std = 6.33209289e-02
 
 rate_bias_driving_noise_std = 5e-5
 cont_rate_bias_driving_noise_std = (
     (1/3) * rate_bias_driving_noise_std / np.sqrt(1 / dt)
 )
-
+cont_rate_bias_driving_noise_std = 8.80374209e-03
 
 # Position and velocity measurement
-p_std = np.array([0.3, 0.3, 0.5]) / 2.5  # Measurement noise
+p_std = np.array([2.20385155e-01,
+                  1.14431449e-01,
+                  2.03476854e-01])  # Measurement noise
 
 
 p_acc = 1e-16
@@ -94,11 +96,11 @@ x_pred_init[6] = 1
 # These have to be set reasonably to get good results
 
 # [241.94198986 319.04325528   2.06011741   0.77419239   0.53211694] best result so far with simplex
-P_pred_init_pos = 10
-P_pred_init_vel = 3
-P_pred_init_err_att = (np.pi/30)
-P_pred_init_err_acc_bias = 0.05
-P_pred_init_err_gyro_bias = 0.001
+P_pred_init_pos = 9.9997
+P_pred_init_vel = 2.99992
+P_pred_init_err_att = 1.08119132e-1
+P_pred_init_err_acc_bias = 4.78494264e-2
+P_pred_init_err_gyro_bias = 3.34993558e-2
 P_pred_init_list = [P_pred_init_pos,
                     P_pred_init_vel,
                     P_pred_init_err_att,
@@ -120,24 +122,32 @@ parameters = eskf_parameters + init_parameters
 parameter_hash = str(adler32(str(parameters + [N, doGNSS]).encode()))
 # %% plotting
 
+with open('optimization.txt', 'a') as file:
+    file.write(f'\n\nNew session\n')
 
-def cost_function(x, *args):
-    P_pred_init_list = x
 
-    print(x)
-    eskf_parameters, x_init, loaded_data, p_std, N = args
+def cost_function(tunables, *args):
+    P_pred_init_list = tunables[:5]
+    eskf_parameters = tunables[5:9]
+    eskf_parameters = np.append(eskf_parameters, args[0])
+    p_std = tunables[9:12]
+    print(tunables)
+    x_init, loaded_data, N = args[1:]
     result = run_eskf(eskf_parameters, x_init, P_pred_init_list, loaded_data,
                       p_std, N, offset=200, use_GNSSaccuracy=True)
-    delta_x = result[3]
-    rmse = np.sqrt(np.mean(np.sum(delta_x[:N, :3]**2, axis=1)))
-    print(f'RMSE: {rmse}\n')
+    # delta_x = result[3]
+    NIS = result[4]
+    cost = np.mean(np.log(NIS[:, 1])**2)
+    print(f'RMSE: {cost}\n')
     time.sleep(0.2)
-    return rmse
+    with open('optimization.txt', 'a') as file:
+        file.write(f'{tunables} {cost}\n')
+    return cost
 
 
-initial_guess = P_pred_init_list
-extra_args = [eskf_parameters] + [x_pred_init] + [loaded_data, p_std, N]
-# minimize(cost_function, initial_guess, tuple(extra_args))
+tunables_init = P_pred_init_list + eskf_parameters[:-2] + list(p_std)
+extra_args = [eskf_parameters[-2:]] + [x_pred_init] + [loaded_data, N]
+minimize(cost_function, tunables_init, tuple(extra_args))
 (x_pred,
     x_est,
     P_est,
@@ -150,7 +160,7 @@ extra_args = [eskf_parameters] + [x_pred_init] + [loaded_data, p_std, N]
     NEES_accbias,
     NEES_gyrobias,
     GNSSk) = run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
-                      p_std, N, use_GNSSaccuracy=True, doGNSS=doGNSS, offset=200)
+                      p_std, N, use_GNSSaccuracy=True, doGNSS=doGNSS, offset=206)
 
 
 t = np.linspace(0, dt * (N - 1), N)

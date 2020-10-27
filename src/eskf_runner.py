@@ -75,7 +75,8 @@ def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
 
     # keep track of current step in GNSS measurements
     offset += timeIMU[0]
-    GNSSk: int = np.searchsorted(timeGNSS, offset)
+    GNSSk_init = np.searchsorted(timeGNSS, offset)
+    GNSSk = GNSSk_init
     offset_idx = np.searchsorted(timeIMU, offset)
     timeIMU = timeIMU[offset_idx:]
     z_acceleration = z_acceleration[offset_idx:]
@@ -124,7 +125,8 @@ def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
               x_est,
               P_est,
               delta_x,
-              NIS,
+              np.hstack((timeGNSS[:, None] - timeGNSS[GNSSk_init],
+                         NIS[:, None]))[GNSSk_init:GNSSk],
               NEES_all,
               NEES_pos,
               NEES_vel,
