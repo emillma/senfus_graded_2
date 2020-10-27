@@ -147,7 +147,7 @@ def cost_function(tunables, *args):
 
 tunables_init = P_pred_init_list + eskf_parameters[:-2] + list(p_std)
 extra_args = [eskf_parameters[-2:]] + [x_pred_init] + [loaded_data, N]
-minimize(cost_function, tunables_init, tuple(extra_args))
+# minimize(cost_function, tunables_init, tuple(extra_args))
 (x_pred,
     x_est,
     P_est,
