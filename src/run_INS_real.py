@@ -42,16 +42,15 @@ dt = np.mean(np.diff(timeIMU))
 # %% Measurement noise
 # IMU noise values for STIM300, based on datasheet and simulation sample rate
 # Continous noise
-# TODO: What to remove here?
 cont_gyro_noise_std = 4.36e-5  # (rad/s)/sqrt(Hz)
 cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
 
 # Discrete sample noise at simulation rate used
 # Hvorfor gange med en halv? (eq. 10.70)
 acc_std = 0.5 * cont_acc_noise_std * np.sqrt(1 / dt)
-# acc_std = 0.02244786
+acc_std = 0.02244786
 rate_std = 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
-# rate_std = 0.13549259
+rate_std = 0.13549259
 
 # Bias values
 acc_bias_driving_noise_std = 4e-3
@@ -93,7 +92,6 @@ x_pred_init[6] = 1
 
 # These have to be set reasonably to get good results
 
-# [241.94198986 319.04325528   2.06011741   0.77419239   0.53211694] best result so far with simplex
 P_pred_init_pos = 9.9997
 P_pred_init_vel = 2.99992
 P_pred_init_err_att = 1.08119132e-1
@@ -110,18 +108,22 @@ init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
 
-N: int = int(300/dt)
-offset = 207.
+N: int = int(60/dt)
+# N: int = timeIMU.size
+offset = 206.
 doGNSS: bool = True
-# TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
 
 
 use_cache = True
 parameters = eskf_parameters + init_parameters
-# %% plotting
-# optimize(cost_function_NIS, eskf_parameters, p_std,
-#          x_pred_init, P_pred_init_list, loaded_data, N, offset,
-#          use_GNSSaccuracy=True)
+
+"""
+To find good parameters we used the Nelder-Mead algorithm. 
+"""
+if True:
+    optimize(cost_function_NIS, eskf_parameters, p_std,
+             x_pred_init, P_pred_init_list, loaded_data, N, offset,
+             use_GNSSaccuracy=True)
 
 (x_pred,
     x_est,

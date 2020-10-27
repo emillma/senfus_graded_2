@@ -11,7 +11,6 @@ def cost_function_NIS(tunables, *args):
     eskf_parameters = np.abs(eskf_parameters)
     p_std = np.abs(np.repeat(tunables[4:6], [2, 1]))
 
-    print(tunables)
     P_pred_init_list, x_init, loaded_data, N, offset, use_GNSSaccuracy = args[1:]
     result = run_eskf(eskf_parameters, x_init, P_pred_init_list, loaded_data,
                       p_std, N, offset=offset,
@@ -31,14 +30,15 @@ def cost_function_NIS(tunables, *args):
     mean_deciance_cost = np.mean(np.log(NIS[:, 1])**2)
     cost = inCIpos90_cost + 0.5*inCIpos95_cost + 0.001 * mean_deciance_cost
 
-    print(f'RMSE: {cost}\n')
-    time.sleep(0.2)
     with open('optimization.txt', 'a') as file:
-        file.write(f'eskf_parameters: {tunables[:4]}\n'
-                   f'gps_parameters: {tunables[4:]}\n'
-                   f'cost {inCIpos90_cost}, {inCIpos95_cost}, '
-                   f'{mean_deciance_cost}, '
-                   f'{cost}\n\n')
+        text = (f'eskf_parameters: {tunables[:4]}\n'
+                f'gps_parameters: {tunables[4:]}\n'
+                f'cost {inCIpos90_cost}, {inCIpos95_cost}, '
+                f'{mean_deciance_cost}, '
+                f'{cost}\n\n')
+        file.write(text)
+        print(text)
+        time.sleep(0.2)
     return cost
 
 
@@ -48,30 +48,35 @@ def cost_function_SIM(tunables, *args):
     eskf_parameters = np.abs(eskf_parameters)
     p_std = np.abs(np.repeat(tunables[4:6], [2, 1]))
 
-    print(tunables)
     P_pred_init_list, x_init, loaded_data, N, offset, use_GNSSaccuracy = args[1:]
-    result = run_eskf(eskf_parameters, x_init, P_pred_init_list, loaded_data,
-                      p_std, N, offset=offset,
-                      use_GNSSaccuracy=use_GNSSaccuracy)
-    # delta_x = result[3]
+    try:
+        result = run_eskf(eskf_parameters, x_init, P_pred_init_list, loaded_data,
+                          p_std, N, offset=offset,
+                          use_GNSSaccuracy=use_GNSSaccuracy)
+        # delta_x = result[3]
 
-    NIS = result[4]
-    NIS_data = NIS[:, 1]
+        NIS = result[4]
 
-    # cost = np.mean(np.log(NIS[:, 1])**2)
-    delta = result[3]
-    cost_delta = np.mean(np.sum(delta[:, :3]**2, axis=1))
-    nees_all = result[5]
-    cost_nees = np.mean(np.log(nees_all)**2)
-    cost = cost_delta + 0.001*cost_nees
-    print(f'RMSE: {cost}\n')
-    time.sleep(0.2)
-    with open('optimization.txt', 'a') as file:
-        file.write(f'eskf_parameters: {tunables[:4]}\n'
-                   f'gps_parameters: {tunables[4:]}\n'
-                   f'cost {cost_delta}, {cost_nees}\n'
-                   f'{cost}\n\n')
-    return cost
+        # cost = np.mean(np.log(NIS[:, 1])**2)
+        delta = result[3]
+        cost_delta = np.mean(np.sum(delta[:, :3]**2, axis=1))
+        nees_all = result[5]
+        cost_nees = np.mean(np.log(nees_all)**2)
+        cost_nis = np.mean(np.log(NIS[:, 1])**2)
+        cost = cost_delta + cost_nees + cost_nis
+
+        with open('optimization.txt', 'a') as file:
+            text = (f'eskf_parameters: {tunables[:4]}\n'
+                    f'gps_parameters: {tunables[4:]}\n'
+                    f'cost {cost_delta}, {cost_nees}, {cost_nis}\n'
+                    f'{cost}\n\n')
+            file.write(text)
+            print(text)
+            time.sleep(0.2)
+        return cost
+
+    except:
+        return np.inf
 
 
 def optimize(cost_function, eskf_parameters, p_std,

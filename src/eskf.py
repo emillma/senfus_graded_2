@@ -271,8 +271,8 @@ class ESKF:
             30,
             30,
         ), f"ESKF.discrete_error_matrices: Van Loan matrix shape incorrect {omega.shape}"
-        # VanLoanMatrix = la.expm(V)  # This can be slow...
-        VanLoanMatrix = np.identity(V.shape[0]) + V  # This can be slow...
+        VanLoanMatrix = la.expm(V)  # This can be slow...
+        # VanLoanMatrix = np.identity(V.shape[0]) + V  # This can be slow...
 
         Ad = VanLoanMatrix[CatSlice(15, 30)**2].T
         GQGd = Ad @ VanLoanMatrix[CatSlice(0, 15)*CatSlice(15, 30)]
@@ -684,7 +684,7 @@ class ESKF:
 
         # Conjugate of quaternion
         quaternion_conj = x_nominal[ATT_IDX]
-        quaternion_conj[1] *= -1
+        quaternion_conj[1:] *= -1
 
         delta_quaternion = quaternion_product(quaternion_conj, x_true[ATT_IDX])
         delta_theta = 2 * delta_quaternion[1:]

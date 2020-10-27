@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import time
-from plotter import plot_path, plot_estimate, state_error_plots
+from plotter import (plot_path, plot_estimate, state_error_plots,
+                     plot_NIS, plot_NEES)
 from eskf_runner import run_eskf
 
 from eskf import (
@@ -99,7 +100,7 @@ init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
 
-N: int = 20000
+N: int = int(120/dt)
 offset = 0.
 doGNSS: bool = True
 # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
@@ -109,9 +110,13 @@ parameters = eskf_parameters + init_parameters
 # %% plotting
 
 
-# optimize(cost_function_SIM, eskf_parameters, p_std,
-#          x_pred_init, P_pred_init_list, loaded_data, N, offset,
-#          use_GNSSaccuracy=False)
+"""
+To find good parameters we used the Nelder-Mead algorithm. 
+"""
+if True:
+    optimize(cost_function_SIM, eskf_parameters, p_std,
+             x_pred_init, P_pred_init_list, loaded_data, N, offset,
+             use_GNSSaccuracy=False)
 (x_pred,
     x_est,
     P_est,
@@ -132,4 +137,8 @@ t = np.linspace(0, dt * (N - 1), N)
 plot_path(N, GNSSk, x_est, z_GNSS, x_true)
 plot_estimate(t, N, x_est)
 state_error_plots(t, N, x_est, x_true, delta_x)
+plot_NIS(NIS)
+plot_NEES(t, N, dt,
+          NEES_all, NEES_pos, NEES_vel, NEES_att, NEES_accbias,
+          NEES_gyrobias, confprob=0.95)
 plt.show()

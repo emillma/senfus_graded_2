@@ -164,10 +164,10 @@ def error_distance_plot(t, N, dt, GNSSk, x_true, delta_x, z_GNSS):
     # %% Consistency
 
 
-def nees_plot(t, N, dt, GNSSk,
+def plot_NEES(t, N, dt,
               NEES_all, NEES_pos, NEES_vel, NEES_att, NEES_accbias,
-              NEES_gyrobias, NIS, confprob=0.95):
-    fig5, axs5 = plt.subplots(7, 1, num=5, clear=True)
+              NEES_gyrobias, confprob=0.95):
+    fig5, axs5 = plt.subplots(6, 1, num=5, clear=True)
 
     CI15 = np.array(scipy.stats.chi2.interval(confprob, 15)).reshape((2, 1))
     CI3 = np.array(scipy.stats.chi2.interval(confprob, 3)).reshape((2, 1))
@@ -209,7 +209,7 @@ def nees_plot(t, N, dt, GNSSk,
     insideCI = np.mean((CI3[0] <= NEES_accbias[:N])
                        * (NEES_accbias[:N] <= CI3[1]))
     axs5[4].set(
-        title=f"Accelerometer NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
+        title=f"Accelerometer bias NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
     )
     axs5[4].set_ylim([0, 20])
 
@@ -221,14 +221,6 @@ def nees_plot(t, N, dt, GNSSk,
         title=f"Gyro bias NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
     )
     axs5[5].set_ylim([0, 20])
-
-    axs5[6].plot(NIS[:GNSSk])
-    axs5[6].plot(np.array([0, N - 1]) * dt, (CI3 @ np.ones((1, 2))).T)
-    insideCI = np.mean((CI3[0] <= NIS[:GNSSk]) * (NIS[GNSSk] <= CI3[1]))
-    axs5[6].set(
-        title=f"NIS ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
-    )
-    axs5[6].set_ylim([0, 20])
 
     fig5.tight_layout()
     # if dosavefigures:
