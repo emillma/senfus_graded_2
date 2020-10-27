@@ -271,7 +271,8 @@ class ESKF:
             30,
             30,
         ), f"ESKF.discrete_error_matrices: Van Loan matrix shape incorrect {omega.shape}"
-        VanLoanMatrix = la.expm(V)  # This can be slow...
+        # VanLoanMatrix = la.expm(V)  # This can be slow...
+        VanLoanMatrix = np.identity(V.shape[0]) + V  # This can be slow...
 
         Ad = VanLoanMatrix[CatSlice(15, 30)**2].T
         GQGd = Ad @ VanLoanMatrix[CatSlice(0, 15)*CatSlice(15, 30)]
@@ -650,7 +651,7 @@ class ESKF:
             x_nominal, P, z_GNSS_position, R_GNSS, lever_arm
         )
 
-        NIS = v.T @ la.solve(S, v)
+        NIS = v.T @ np.linalg.inv(S) @ v
 
         assert NIS >= 0, "EKSF.NIS_GNSS_positionNIS: NIS not positive"
 

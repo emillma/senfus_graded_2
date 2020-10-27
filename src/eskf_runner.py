@@ -19,6 +19,10 @@ def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
 
     S_a = loaded_data["S_a"]
     S_g = loaded_data["S_g"]
+
+    # S_a = np.round(S_a)
+    # S_g = np.round(S_g)
+
     lever_arm = loaded_data["leverarm"].ravel()
     timeGNSS = loaded_data["timeGNSS"].ravel()
     timeIMU = loaded_data["timeIMU"].ravel()
@@ -61,17 +65,17 @@ def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
     )
     R_GNSS = np.diag(p_std ** 2)
 
-    x_est = np.zeros((steps, 16))
-    P_est = np.zeros((steps, 15, 15))
+    x_est = np.zeros((N, 16))
+    P_est = np.zeros((N, 15, 15))
 
     NIS = np.zeros(gnss_steps)
-    delta_x = np.zeros((steps, 15))
-    NEES_all = np.zeros(steps)
-    NEES_pos = np.zeros(steps)
-    NEES_vel = np.zeros(steps)
-    NEES_att = np.zeros(steps)
-    NEES_accbias = np.zeros(steps)
-    NEES_gyrobias = np.zeros(steps)
+    delta_x = np.zeros((N, 15))
+    NEES_all = np.zeros(N)
+    NEES_pos = np.zeros(N)
+    NEES_vel = np.zeros(N)
+    NEES_att = np.zeros(N)
+    NEES_accbias = np.zeros(N)
+    NEES_gyrobias = np.zeros(N)
 
     # keep track of current step in GNSS measurements
     offset += timeIMU[0]

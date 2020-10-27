@@ -1,14 +1,12 @@
 # %% imports
-from scipy.optimize import minimize
 import scipy
 import scipy.io
 import scipy.stats
-
+from optimization import optimize, cost_function_SIM
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import time
-from zlib import adler32
 from plotter import plot_path, plot_estimate, state_error_plots
 from eskf_runner import run_eskf
 
@@ -16,9 +14,6 @@ from eskf import (
     POS_IDX,
     VEL_IDX,
 )
-
-from quaternion import quaternion_to_euler
-from cat_slice import CatSlice
 
 # %% plot config check and style setup
 
@@ -49,10 +44,11 @@ cont_gyro_noise_std = 4.36e-5  # (rad/s)/sqrt(Hz)
 cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
 
 # Discrete sample noise at simulation rate used
-# Hvorfor gange med en halv? (eq. 10.70)
-acc_std = 0.5 * cont_acc_noise_std * np.sqrt(1 / dt)
-rate_std = 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
 
+# acc_std = 0.5 * cont_acc_noise_std * np.sqrt(1 / dt)
+# rate_std = 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
+acc_std = 0.00751446
+rate_std = 0.03472633
 # Bias values
 acc_bias_driving_noise_std = 4e-3
 cont_acc_bias_driving_noise_std = 6 * \
@@ -62,10 +58,10 @@ rate_bias_driving_noise_std = 5e-5
 cont_rate_bias_driving_noise_std = (
     (1/3) * rate_bias_driving_noise_std / np.sqrt(1 / dt)
 )
-
-
+cont_acc_bias_driving_noise_std = 0.01292603
+cont_rate_bias_driving_noise_std = 0.00102356
 # Position and velocity measurement
-p_std = np.array([0.3, 0.3, 0.5])  # Measurement noise
+p_std = np.array([00.31242168, 0.31242168, 0.50292773])  # Measurement noise
 
 p_acc = 1e-16
 p_gyro = 1e-16
@@ -87,9 +83,9 @@ x_pred_init[6] = 1
 # These have to be set reasonably to get good results
 
 # [241.94198986 319.04325528   2.06011741   0.77419239   0.53211694] best result so far with simplex
-P_pred_init_pos = 10
-P_pred_init_vel = 10
-P_pred_init_err_att = 1
+P_pred_init_pos = 1
+P_pred_init_vel = 1
+P_pred_init_err_att = 0.1
 P_pred_init_err_acc_bias = 0.1
 P_pred_init_err_gyro_bias = 0.1
 P_pred_init_list = [P_pred_init_pos,
@@ -103,34 +99,19 @@ init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
 
-N: int = 5000
+N: int = 20000
+offset = 0.
 doGNSS: bool = True
 # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
 
 
-use_cache = True
 parameters = eskf_parameters + init_parameters
-parameter_hash = str(adler32(str(parameters + [N, doGNSS]).encode()))
 # %% plotting
 
 
-def cost_function(x, *args):
-    P_pred_init_list = x
-
-    print(x)
-    eskf_parameters, x_init, loaded_data, p_std, N = args
-    result = run_eskf(eskf_parameters, x_init, P_pred_init_list, loaded_data,
-                      p_std, N)
-    delta_x = result[3]
-    rmse = np.sqrt(np.mean(np.sum(delta_x[:N, :3]**2, axis=1)))
-    print(f'RMSE: {rmse}\n')
-    time.sleep(0.2)
-    return rmse
-
-
-initial_guess = P_pred_init_list
-extra_args = [eskf_parameters] + [x_pred_init] + [loaded_data, p_std, N]
-# minimize(cost_function, initial_guess, tuple(extra_args))
+# optimize(cost_function_SIM, eskf_parameters, p_std,
+#          x_pred_init, P_pred_init_list, loaded_data, N, offset,
+#          use_GNSSaccuracy=False)
 (x_pred,
     x_est,
     P_est,
@@ -142,8 +123,9 @@ extra_args = [eskf_parameters] + [x_pred_init] + [loaded_data, p_std, N]
     NEES_att,
     NEES_accbias,
     NEES_gyrobias,
-    GNSSk) = run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
-                      p_std, N, doGNSS=doGNSS)
+    GNSSk) = run_eskf(eskf_parameters, x_pred_init, P_pred_init_list,
+                      loaded_data, p_std, N, doGNSS=doGNSS, offset=offset,
+                      use_GNSSaccuracy=False)
 
 
 t = np.linspace(0, dt * (N - 1), N)

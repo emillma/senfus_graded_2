@@ -237,6 +237,25 @@ def nees_plot(t, N, dt, GNSSk,
     # boxplot
 
 
+def plot_NIS(
+        NIS,
+        confprob=0.95):
+
+    fig, ax0 = plt.subplots(1, sharex=True, num=6, clear=True)
+    ax0.set_yscale('log')
+    Ts_list = NIS[:, 0]
+    NIS_data = NIS[:, 1]
+
+    CI3 = np.array(scipy.stats.chi2.interval(confprob, 3))
+
+    ax0.plot(Ts_list, NIS_data)
+    ax0.plot([0, Ts_list[-1]], np.repeat(CI3[None], 2, 0), "--r")
+    ax0.set_ylabel("NIS CV")
+    inCIpos = np.mean((CI3[0] <= NIS_data) * (NIS_data <= CI3[1]))
+    ax0.set_title(
+        f"NIS CV, {inCIpos*100:.2f}% inside {confprob*100:.1f}% CI")
+
+
 def box_plot(N, GNSSk,
              NEES_all, NEES_pos, NEES_vel, NEES_att, NEES_accbias,
              NEES_gyrobias, NIS):
