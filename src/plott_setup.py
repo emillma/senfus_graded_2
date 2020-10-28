@@ -27,7 +27,7 @@ def setup_plot():
             'weight': 'bold',
             'size': 22}
 
-    matplotlib.rc('font', **font)
+    # matplotlib.rc('font', **font)
     # set styles
     try:
         # installed with "pip install SciencePLots"

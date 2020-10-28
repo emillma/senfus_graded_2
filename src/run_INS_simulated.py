@@ -100,7 +100,7 @@ init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
 
-N: int = int(120/dt)
+N: int = int(300/dt)
 offset = 0.
 doGNSS: bool = True
 # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts

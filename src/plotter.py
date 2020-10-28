@@ -79,9 +79,9 @@ def state_error_plots(t, N, x_est, x_true, delta_x):
     axs3[0].set(ylabel="NED position error [m]")
     axs3[0].legend(
         [
-            f"North ({np.sqrt(np.mean(delta_x[:N, POS_IDX[0]]**2))})",
-            f"East ({np.sqrt(np.mean(delta_x[:N, POS_IDX[1]]**2))})",
-            f"Down ({np.sqrt(np.mean(delta_x[:N, POS_IDX[2]]**2))})",
+            f"North ({np.sqrt(np.mean(delta_x[:N, POS_IDX[0]]**2)):.2e})",
+            f"East ({np.sqrt(np.mean(delta_x[:N, POS_IDX[1]]**2)):.2e})",
+            f"Down ({np.sqrt(np.mean(delta_x[:N, POS_IDX[2]]**2)):.2e})",
         ]
     )
 
@@ -89,9 +89,9 @@ def state_error_plots(t, N, x_est, x_true, delta_x):
     axs3[1].set(ylabel="Velocities error [m]")
     axs3[1].legend(
         [
-            f"North ({np.sqrt(np.mean(delta_x[:N, VEL_IDX[0]]**2))})",
-            f"East ({np.sqrt(np.mean(delta_x[:N, VEL_IDX[1]]**2))})",
-            f"Down ({np.sqrt(np.mean(delta_x[:N, VEL_IDX[2]]**2))})",
+            f"North ({np.sqrt(np.mean(delta_x[:N, VEL_IDX[0]]**2)):.2e})",
+            f"East ({np.sqrt(np.mean(delta_x[:N, VEL_IDX[1]]**2)):.2e})",
+            f"Down ({np.sqrt(np.mean(delta_x[:N, VEL_IDX[2]]**2)):.2e})",
         ]
     )
 
@@ -102,9 +102,9 @@ def state_error_plots(t, N, x_est, x_true, delta_x):
     axs3[2].set(ylabel="Euler angles error [deg]")
     axs3[2].legend(
         [
-            rf"$\phi$ ({np.sqrt(np.mean((eul_error[:N, 0] * 180 / np.pi)**2))})",
-            rf"$\theta$ ({np.sqrt(np.mean((eul_error[:N, 1] * 180 / np.pi)**2))})",
-            rf"$\psi$ ({np.sqrt(np.mean((eul_error[:N, 2] * 180 / np.pi)**2))})",
+            rf"$\phi$ ({np.sqrt(np.mean((eul_error[:N, 0])**2)):.2e})",
+            rf"$\theta$ ({np.sqrt(np.mean((eul_error[:N, 1])**2)):.2e})",
+            rf"$\psi$ ({np.sqrt(np.mean((eul_error[:N, 2])**2)):.2e})",
         ]
     )
 
@@ -112,9 +112,9 @@ def state_error_plots(t, N, x_est, x_true, delta_x):
     axs3[3].set(ylabel="Accl bias error [m/s^2]")
     axs3[3].legend(
         [
-            f"$x$ ({np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[0]]**2))})",
-            f"$y$ ({np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[1]]**2))})",
-            f"$z$ ({np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[2]]**2))})",
+            f"$x$ ({np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[0]]**2)):.2e})",
+            f"$y$ ({np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[1]]**2)):.2e})",
+            f"$z$ ({np.sqrt(np.mean(delta_x[:N, ERR_ACC_BIAS_IDX[2]]**2)):.2e})",
         ]
     )
 
@@ -122,9 +122,9 @@ def state_error_plots(t, N, x_est, x_true, delta_x):
     axs3[4].set(ylabel="Gyro bias error [deg/s]")
     axs3[4].legend(
         [
-            f"$x$ ({np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[0]]* 180 / np.pi)**2))})",
-            f"$y$ ({np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[1]]* 180 / np.pi)**2))})",
-            f"$z$ ({np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[2]]* 180 / np.pi)**2))})",
+            f"$x$ ({np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[0]]* 180 / np.pi)**2)):.2e})",
+            f"$y$ ({np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[1]]* 180 / np.pi)**2)):.2e})",
+            f"$z$ ({np.sqrt(np.mean((delta_x[:N, ERR_GYRO_BIAS_IDX[2]]* 180 / np.pi)**2)):.2e})",
         ]
     )
 
@@ -177,51 +177,45 @@ def plot_NEES(t, N, dt,
     axs5[0].plot(np.array([0, N - 1]) * dt, (CI15 @ np.ones((1, 2))).T)
     insideCI = np.mean((CI15[0] <= NEES_all[:N]) * (NEES_all[:N] <= CI15[1]))
     axs5[0].set(
-        title=f"Total NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
+        title=f"Total NEES ({100 *  insideCI:.2f} inside {100 * confprob} confidence interval)"
     )
-    axs5[0].set_ylim([0, 50])
 
     axs5[1].plot(t, (NEES_pos[0:N]).T)
     axs5[1].plot(np.array([0, N - 1]) * dt, (CI3 @ np.ones((1, 2))).T)
     insideCI = np.mean((CI3[0] <= NEES_pos[:N]) * (NEES_pos[:N] <= CI3[1]))
     axs5[1].set(
-        title=f"Position NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
+        title=f"Position NEES ({100 *  insideCI:.2f} inside {100 * confprob} confidence interval)"
     )
-    axs5[1].set_ylim([0, 20])
 
     axs5[2].plot(t, (NEES_vel[0:N]).T)
     axs5[2].plot(np.array([0, N - 1]) * dt, (CI3 @ np.ones((1, 2))).T)
     insideCI = np.mean((CI3[0] <= NEES_vel[:N]) * (NEES_vel[:N] <= CI3[1]))
     axs5[2].set(
-        title=f"Velocity NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
+        title=f"Velocity NEES ({100 *  insideCI:.2f} inside {100 * confprob} confidence interval)"
     )
-    axs5[2].set_ylim([0, 20])
 
     axs5[3].plot(t, (NEES_att[0:N]).T)
     axs5[3].plot(np.array([0, N - 1]) * dt, (CI3 @ np.ones((1, 2))).T)
     insideCI = np.mean((CI3[0] <= NEES_att[:N]) * (NEES_att[:N] <= CI3[1]))
     axs5[3].set(
-        title=f"Attitude NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
+        title=f"Attitude NEES ({100 *  insideCI:.2f} inside {100 * confprob} confidence interval)"
     )
-    axs5[3].set_ylim([0, 20])
 
     axs5[4].plot(t, (NEES_accbias[0:N]).T)
     axs5[4].plot(np.array([0, N - 1]) * dt, (CI3 @ np.ones((1, 2))).T)
     insideCI = np.mean((CI3[0] <= NEES_accbias[:N])
                        * (NEES_accbias[:N] <= CI3[1]))
     axs5[4].set(
-        title=f"Accelerometer bias NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
+        title=f"Accelerometer bias NEES ({100 *  insideCI:.2f} inside {100 * confprob} confidence interval)"
     )
-    axs5[4].set_ylim([0, 20])
 
     axs5[5].plot(t, (NEES_gyrobias[0:N]).T)
     axs5[5].plot(np.array([0, N - 1]) * dt, (CI3 @ np.ones((1, 2))).T)
     insideCI = np.mean((CI3[0] <= NEES_gyrobias[:N])
                        * (NEES_gyrobias[:N] <= CI3[1]))
     axs5[5].set(
-        title=f"Gyro bias NEES ({100 *  insideCI:.1f} inside {100 * confprob} confidence interval)"
+        title=f"Gyro bias NEES ({100 *  insideCI:.2f} inside {100 * confprob} confidence interval)"
     )
-    axs5[5].set_ylim([0, 20])
 
     fig5.tight_layout()
     # if dosavefigures:

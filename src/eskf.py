@@ -272,7 +272,7 @@ class ESKF:
             30,
         ), f"ESKF.discrete_error_matrices: Van Loan matrix shape incorrect {omega.shape}"
         VanLoanMatrix = la.expm(V)  # This can be slow...
-        # VanLoanMatrix = np.identity(V.shape[0]) + V  # This can be slow...
+        # VanLoanMatrix = np.identity(V.shape[0]) + V  # Fast but unsafe
 
         Ad = VanLoanMatrix[CatSlice(15, 30)**2].T
         GQGd = Ad @ VanLoanMatrix[CatSlice(0, 15)*CatSlice(15, 30)]
@@ -509,7 +509,7 @@ class ESKF:
 
         H = np.block([np.eye(3), np.zeros((3, 12))])  # measurement matrix
 
-        v = z_GNSS_position - x_nominal[POS_IDX]  # TODO: innovation
+        v = z_GNSS_position - x_nominal[POS_IDX]  # Innovation
 
         # leverarm compensation
         if not np.allclose(lever_arm, 0):

@@ -15,7 +15,8 @@ from eskf import (
 
 
 def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
-             p_std, N, use_GNSSaccuracy=False, doGNSS=True, debug=False, offset=0.):
+             p_std, N, use_GNSSaccuracy=False, doGNSS=True,
+             debug=False, offset=0.):
 
     S_a = loaded_data["S_a"]
     S_g = loaded_data["S_g"]
@@ -61,7 +62,7 @@ def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
         *eskf_parameters,
         S_a=S_a,  # set the accelerometer correction matrix
         S_g=S_g,  # set the gyro correction matrix,
-        debug=False
+        debug=debug
     )
     R_GNSS = np.diag(p_std ** 2)
 
