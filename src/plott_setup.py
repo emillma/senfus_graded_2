@@ -23,13 +23,19 @@ def setup_plot():
             print("unknown inline backend")
 
     print("continuing with this plotting backend", end="\n\n\n")
+    font = {'family': 'normal',
+            'weight': 'bold',
+            'size': 22}
 
+    matplotlib.rc('font', **font)
     # set styles
     try:
-        # installed with "pip install SciencePLots" (https://github.com/garrettj403/SciencePlots.git)
+        # installed with "pip install SciencePLots"
+        # (https://github.com/garrettj403/SciencePlots.git)
         # gives quite nice plots
-        plt_styles = ["science", "grid", "bright", "no-latex"]
-        plt.style.use(plt_styles)
+        plt_styles = ["science", "grid", "no-latex"]
+        # plt.style.use(plt_styles)
+        # plt.style.use("science")
         print(f"pyplot using style set {plt_styles}")
     except Exception as e:
         print(e)

@@ -20,7 +20,8 @@ from eskf import (
 
 from plott_setup import setup_plot
 setup_plot()
-
+np.seterr(all='raise')
+scipy.special.seterr(all='raise')
 # %% load data and plot
 folder = os.path.dirname(__file__)
 # filename_to_load = f"{folder}/../data/task_simulation.mat"
@@ -48,8 +49,8 @@ cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
 
 # acc_std = 0.5 * cont_acc_noise_std * np.sqrt(1 / dt)
 # rate_std = 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
-acc_std = 4.34048221e-09
-rate_std = 2.37390996e-03
+acc_std = 1.95304582e-08
+rate_std = 2.74559739e-03
 # Bias values
 # acc_bias_driving_noise_std = 4e-3
 # cont_acc_bias_driving_noise_std = 6 * \
@@ -59,13 +60,13 @@ rate_std = 2.37390996e-03
 # cont_rate_bias_driving_noise_std = (
 #     (1/3) * rate_bias_driving_noise_std / np.sqrt(1 / dt)
 # )
-cont_acc_bias_driving_noise_std = 7.29713435e-09
-cont_rate_bias_driving_noise_std = 7.44537542e-09
+cont_acc_bias_driving_noise_std = 7.73322087e-03
+cont_rate_bias_driving_noise_std = 3.45687190e-04
 # Position and velocity measurement
-p_std = np.array([0.36938452, 0.36938452, 0.6532359])  # Measurement noise
+p_std = np.array([0.42420036, 0.42420036, 0.75701892])  # Measurement noise
 
-p_acc = 1e-16
-p_gyro = 1e-16
+p_acc = 1e-9
+p_gyro = 1e-9
 # [-2.71073648e-02  1.97296299e-04 -7.88136014e-04  5.62588030e-05
 #  -7.26577980e-04  1.43524292e-01]
 eskf_parameters = [acc_std,
@@ -84,11 +85,11 @@ x_pred_init[6] = 1
 # These have to be set reasonably to get good results
 
 # [241.94198986 319.04325528   2.06011741   0.77419239   0.53211694] best result so far with simplex
-P_pred_init_pos = 1
-P_pred_init_vel = 1
-P_pred_init_err_att = 0.1
-P_pred_init_err_acc_bias = 0.1
-P_pred_init_err_gyro_bias = 0.1
+P_pred_init_pos = 9.81714885e-01
+P_pred_init_vel = 9.74006470e-01
+P_pred_init_err_att = 3.70453162e-03
+P_pred_init_err_acc_bias = 3.30108975e-02
+P_pred_init_err_gyro_bias = 5.78939881e-04
 P_pred_init_list = [P_pred_init_pos,
                     P_pred_init_vel,
                     P_pred_init_err_att,
@@ -100,7 +101,7 @@ init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
 
-N: int = int(200/dt)
+N: int = int(120/dt)
 offset = 0.
 doGNSS: bool = True
 # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts

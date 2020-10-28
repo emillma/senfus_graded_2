@@ -651,7 +651,7 @@ class ESKF:
             x_nominal, P, z_GNSS_position, R_GNSS, lever_arm
         )
 
-        NIS = v.T @ np.linalg.inv(S) @ v
+        NIS = v.T @ la.solve(S, v)
 
         assert NIS >= 0, "EKSF.NIS_GNSS_positionNIS: NIS not positive"
 
