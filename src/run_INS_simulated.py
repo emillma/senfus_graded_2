@@ -41,7 +41,6 @@ dt = np.mean(np.diff(timeIMU))
 # %% Measurement noise
 # IMU noise values for STIM300, based on datasheet and simulation sample rate
 # Continous noise
-# TODO: What to remove here?
 cont_gyro_noise_std = 4.36e-5  # (rad/s)/sqrt(Hz)
 cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
 
@@ -49,8 +48,8 @@ cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
 
 # acc_std = 0.5 * cont_acc_noise_std * np.sqrt(1 / dt)
 # rate_std = 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
-acc_std = 1.95304582e-08
-rate_std = 2.74559739e-03
+acc_std = 3.92364040e-03
+rate_std = 2.74409187e-04
 # Bias values
 # acc_bias_driving_noise_std = 4e-3
 # cont_acc_bias_driving_noise_std = 6 * \
@@ -60,10 +59,10 @@ rate_std = 2.74559739e-03
 # cont_rate_bias_driving_noise_std = (
 #     (1/3) * rate_bias_driving_noise_std / np.sqrt(1 / dt)
 # )
-cont_acc_bias_driving_noise_std = 7.73322087e-03
-cont_rate_bias_driving_noise_std = 3.45687190e-04
+cont_acc_bias_driving_noise_std = 1.48610933e-03
+cont_rate_bias_driving_noise_std = 5.62468004e-04
 # Position and velocity measurement
-p_std = np.array([0.42420036, 0.42420036, 0.75701892])  # Measurement noise
+p_std = np.array([0.3887816, 0.3887816, 0.51122025])  # Measurement noise
 
 p_acc = 1e-9
 p_gyro = 1e-9
@@ -85,11 +84,11 @@ x_pred_init[6] = 1
 # These have to be set reasonably to get good results
 
 # [241.94198986 319.04325528   2.06011741   0.77419239   0.53211694] best result so far with simplex
-P_pred_init_pos = 9.81714885e-01
-P_pred_init_vel = 9.74006470e-01
-P_pred_init_err_att = 3.70453162e-03
-P_pred_init_err_acc_bias = 3.30108975e-02
-P_pred_init_err_gyro_bias = 5.78939881e-04
+P_pred_init_pos = 0.584566
+P_pred_init_vel = 0.78118225
+P_pred_init_err_att = 0.00114295
+P_pred_init_err_acc_bias = 0.02167314
+P_pred_init_err_gyro_bias = 0.00939913
 P_pred_init_list = [P_pred_init_pos,
                     P_pred_init_vel,
                     P_pred_init_err_att,

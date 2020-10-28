@@ -70,8 +70,7 @@ p_std = np.array([0.22688051, 0.11227113, 0.22558563])  # Measurement noise
 
 p_acc = 1e-16
 p_gyro = 1e-16
-# [-2.71073648e-02  1.97296299e-04 -7.88136014e-04  5.62588030e-05
-#  -7.26577980e-04  1.43524292e-01]
+
 eskf_parameters = [acc_std,
                    rate_std,
                    cont_acc_bias_driving_noise_std,
