@@ -48,8 +48,8 @@ cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
 
 # acc_std = 0.5 * cont_acc_noise_std * np.sqrt(1 / dt)
 # rate_std = 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
-acc_std = 0.00751446
-rate_std = 0.03472633
+acc_std = 4.34048221e-09
+rate_std = 2.37390996e-03
 # Bias values
 acc_bias_driving_noise_std = 4e-3
 cont_acc_bias_driving_noise_std = 6 * \
@@ -59,10 +59,10 @@ rate_bias_driving_noise_std = 5e-5
 cont_rate_bias_driving_noise_std = (
     (1/3) * rate_bias_driving_noise_std / np.sqrt(1 / dt)
 )
-cont_acc_bias_driving_noise_std = 0.01292603
-cont_rate_bias_driving_noise_std = 0.00102356
+cont_acc_bias_driving_noise_std = 7.29713435e-09
+cont_rate_bias_driving_noise_std = 7.44537542e-09
 # Position and velocity measurement
-p_std = np.array([00.31242168, 0.31242168, 0.50292773])  # Measurement noise
+p_std = np.array([0.36938452, 0.36938452, 0.6532359])  # Measurement noise
 
 p_acc = 1e-16
 p_gyro = 1e-16
@@ -113,7 +113,7 @@ parameters = eskf_parameters + init_parameters
 """
 To find good parameters we used the Nelder-Mead algorithm. 
 """
-if True:
+if False:
     optimize(cost_function_SIM, eskf_parameters, p_std,
              x_pred_init, P_pred_init_list, loaded_data, N, offset,
              use_GNSSaccuracy=False)

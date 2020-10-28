@@ -3,6 +3,7 @@ import scipy.stats
 from eskf_runner import run_eskf
 from scipy.optimize import minimize
 import time
+import functools
 
 
 def cost_function_NIS(tunables, *args):
@@ -56,14 +57,17 @@ def cost_function_SIM(tunables, *args):
         # delta_x = result[3]
 
         NIS = result[4]
+        NEES_list = result[6:11]
 
+        def log_error_func(x):
+            return np.mean(np.log(x)**2)
         # cost = np.mean(np.log(NIS[:, 1])**2)
         delta = result[3]
-        cost_delta = np.mean(np.sum(delta[:, :3]**2, axis=1))
+        cost_delta = np.mean(np.sum(delta**2, axis=1))
         nees_all = result[5]
-        cost_nees = np.mean(np.log(nees_all)**2)
+        cost_nees = sum([log_error_func(i) for i in NEES_list])
         cost_nis = np.mean(np.log(NIS[:, 1])**2)
-        cost = cost_delta + cost_nees + cost_nis
+        cost = 20*cost_delta + cost_nees + cost_nis
 
         with open('optimization.txt', 'a') as file:
             text = (f'eskf_parameters: {tunables[:4]}\n'
