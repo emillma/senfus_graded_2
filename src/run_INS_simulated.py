@@ -51,14 +51,14 @@ cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
 acc_std = 4.34048221e-09
 rate_std = 2.37390996e-03
 # Bias values
-acc_bias_driving_noise_std = 4e-3
-cont_acc_bias_driving_noise_std = 6 * \
-    acc_bias_driving_noise_std / np.sqrt(1 / dt)
+# acc_bias_driving_noise_std = 4e-3
+# cont_acc_bias_driving_noise_std = 6 * \
+#     acc_bias_driving_noise_std / np.sqrt(1 / dt)
 
-rate_bias_driving_noise_std = 5e-5
-cont_rate_bias_driving_noise_std = (
-    (1/3) * rate_bias_driving_noise_std / np.sqrt(1 / dt)
-)
+# rate_bias_driving_noise_std = 5e-5
+# cont_rate_bias_driving_noise_std = (
+#     (1/3) * rate_bias_driving_noise_std / np.sqrt(1 / dt)
+# )
 cont_acc_bias_driving_noise_std = 7.29713435e-09
 cont_rate_bias_driving_noise_std = 7.44537542e-09
 # Position and velocity measurement
@@ -100,7 +100,7 @@ init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
 
-N: int = int(120/dt)
+N: int = int(200/dt)
 offset = 0.
 doGNSS: bool = True
 # TODO: Set this to False if you want to check that the predictions make sense over reasonable time lenghts
@@ -113,7 +113,7 @@ parameters = eskf_parameters + init_parameters
 """
 To find good parameters we used the Nelder-Mead algorithm. 
 """
-if False:
+if input("Do you want to run the optimizer (takes several hours)? [y/n]: ") == 'y':
     optimize(cost_function_SIM, eskf_parameters, p_std,
              x_pred_init, P_pred_init_list, loaded_data, N, offset,
              use_GNSSaccuracy=False)

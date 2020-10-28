@@ -120,7 +120,7 @@ parameters = eskf_parameters + init_parameters
 """
 To find good parameters we used the Nelder-Mead algorithm. 
 """
-if True:
+if input("Do you want to run the optimizer (takes several hours)? [y/n]: ") == 'y':
     optimize(cost_function_NIS, eskf_parameters, p_std,
              x_pred_init, P_pred_init_list, loaded_data, N, offset,
              use_GNSSaccuracy=True)

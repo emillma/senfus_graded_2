@@ -168,7 +168,8 @@ def plot_NEES(t, N, dt,
               NEES_all, NEES_pos, NEES_vel, NEES_att, NEES_accbias,
               NEES_gyrobias, confprob=0.95):
     fig5, axs5 = plt.subplots(6, 1, num=5, clear=True)
-
+    for ax in axs5:
+        ax.set_yscale('log')
     CI15 = np.array(scipy.stats.chi2.interval(confprob, 15)).reshape((2, 1))
     CI3 = np.array(scipy.stats.chi2.interval(confprob, 3)).reshape((2, 1))
 
