@@ -50,9 +50,9 @@ dt = np.mean(np.diff(timeIMU))
 # acc_std = 0.5 * cont_acc_noise_std * np.sqrt(1 / dt)
 # rate_std = 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
 
-acc_std = 3.92364040e-03 * np.sqrt(0.01/0.004)
-rate_std = 2.74409187e-04 * np.sqrt(0.01/0.004)
 
+acc_std = 3.92364040e-03 / np.sqrt(0.01/dt)
+rate_std = 2.74409187e-04 / np.sqrt(0.01/dt)
 # Bias values
 # acc_bias_driving_noise_std = 4e-3
 # cont_acc_bias_driving_noise_std = 6 * \
@@ -62,9 +62,8 @@ rate_std = 2.74409187e-04 * np.sqrt(0.01/0.004)
 # cont_rate_bias_driving_noise_std = (
 #     (1/3) * rate_bias_driving_noise_std / np.sqrt(1 / dt)
 # )
-cont_acc_bias_driving_noise_std = 0.04427971 * np.sqrt(0.01/dt)
-cont_rate_bias_driving_noise_std = 0.00487923 * np.sqrt(0.01/dt)
-
+cont_acc_bias_driving_noise_std = 1.48610933e-03 / np.sqrt(0.01/dt)
+cont_rate_bias_driving_noise_std = 5.62468004e-04 / np.sqrt(0.01/dt)
 # Position and velocity measurement
 p_std = np.array([0.3887816, 0.3887816, 0.51122025])  # Measurement noise
 
@@ -80,8 +79,8 @@ eskf_parameters = [acc_std,
                    p_gyro]
 # %% Initialise
 x_pred_init = np.zeros(16)
-x_pred_init[POS_IDX] = np.array([0, 0, 0])  # starting 5 metres above ground
-x_pred_init[VEL_IDX] = np.array([0, 0, 0])  # starting at 20 m/s due north
+x_pred_init[POS_IDX] = np.array([0, 0, 0])
+x_pred_init[VEL_IDX] = np.array([0, 0, 0])
 x_pred_init[ATT_IDX] = np.array([
     np.cos(45 * np.pi / 180),
     0, 0,
@@ -92,11 +91,11 @@ x_pred_init[6] = 1
 
 # These have to be set reasonably to get good results
 
-P_pred_init_pos = 9.9997
-P_pred_init_vel = 2.99992
-P_pred_init_err_att = 1.08119132e-1
-P_pred_init_err_acc_bias = 4.78494264e-2
-P_pred_init_err_gyro_bias = 3.34993558e-2
+P_pred_init_pos = 10
+P_pred_init_vel = 3
+P_pred_init_err_att = (np.pi/30)
+P_pred_init_err_acc_bias = 0.05
+P_pred_init_err_gyro_bias = (1e-3)
 P_pred_init_list = [P_pred_init_pos,
                     P_pred_init_vel,
                     P_pred_init_err_att,
@@ -108,7 +107,7 @@ init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
 
-N: int = int(60/dt)
+N: int = int(30/dt)
 # N: int = timeIMU.size
 offset = 206.
 doGNSS: bool = True
@@ -118,7 +117,7 @@ use_cache = True
 parameters = eskf_parameters + init_parameters
 
 """
-To find good parameters we used the Nelder-Mead algorithm. 
+To find good parameters we used the Nelder-Mead algorithm.
 """
 if input("Do you want to run the optimizer (takes several hours)? [y/n]: ") == 'y':
     optimize(cost_function_NIS, eskf_parameters, p_std,
