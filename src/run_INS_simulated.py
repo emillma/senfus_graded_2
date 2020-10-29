@@ -41,8 +41,8 @@ dt = np.mean(np.diff(timeIMU))
 # %% Measurement noise
 # IMU noise values for STIM300, based on datasheet and simulation sample rate
 # Continous noise
-cont_gyro_noise_std = 4.36e-5  # (rad/s)/sqrt(Hz)
-cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
+# cont_gyro_noise_std = 4.36e-5  # (rad/s)/sqrt(Hz)
+# cont_acc_noise_std = 1.167e-3  # (m/s**2)/sqrt(Hz)
 
 # Discrete sample noise at simulation rate used
 

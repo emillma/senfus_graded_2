@@ -7,6 +7,7 @@ import functools
 
 
 def cost_function_NIS(tunables, *args):
+    tunables = tunables.copy()
     eskf_parameters = tunables[:6]
     # eskf_parameters = np.append(eskf_parameters, args[0])
     eskf_parameters[-2:] = 10**eskf_parameters[-2:]
@@ -21,30 +22,29 @@ def cost_function_NIS(tunables, *args):
         # delta_x = result[3]
 
         NIS = result[4]
-        NIS_data = NIS[:, 1]
-        CI390 = np.array(scipy.stats.chi2.interval(0.9, 3))
-        CI395 = np.array(scipy.stats.chi2.interval(0.95, 3))
-        inCIpos90 = np.mean((CI390[0] <= NIS_data) * (NIS_data <= CI390[1]))
-        inCIpos95 = np.mean((CI395[0] <= NIS_data) * (NIS_data <= CI395[1]))
+        # NIS_data = NIS[:, 1]
+        # CI390 = np.array(scipy.stats.chi2.interval(0.9, 3))
+        # CI395 = np.array(scipy.stats.chi2.interval(0.95, 3))
+        # inCIpos90 = np.mean((CI390[0] <= NIS_data) * (NIS_data <= CI390[1]))
+        # inCIpos95 = np.mean((CI395[0] <= NIS_data) * (NIS_data <= CI395[1]))
 
-        # cost = np.mean(np.log(NIS[:, 1])**2)
-        inCIpos90_cost = 1-inCIpos90
-        inCIpos95_cost = 1-inCIpos95
+        # # cost = np.mean(np.log(NIS[:, 1])**2)
+        # inCIpos90_cost = 1-inCIpos90
+        # inCIpos95_cost = 1-inCIpos95
         mean_deciance_cost = np.mean(np.log(NIS[:, 1])**2)
-        cost = inCIpos90_cost + 0.5*inCIpos95_cost + 0.001 * mean_deciance_cost
+        cost = mean_deciance_cost
 
         with open('optimization.txt', 'a') as file:
             text = (f'eskf_parameters: {eskf_parameters}\n'
                     f'gps_parameters: {p_std}\n'
                     f'init_P_parameters: {P_pred_init_list}\n'
-                    f'cost {inCIpos90_cost}, {inCIpos95_cost}, '
-                    f'{mean_deciance_cost}, '
                     f'{cost}\n\n')
             file.write(text)
             print(text)
             time.sleep(0.2)
         return cost
-    except:
+    except Exception as e:
+        print(e)
         return np.inf
 
 
