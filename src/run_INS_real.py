@@ -51,8 +51,8 @@ dt = np.mean(np.diff(timeIMU))
 # rate_std = 0.5 * cont_gyro_noise_std * np.sqrt(1 / dt)
 
 
-acc_std = 3.92364040e-03 / np.sqrt(0.01/dt)
-rate_std = 2.74409187e-04 / np.sqrt(0.01/dt)
+acc_std = 3.92364040e-03 * np.sqrt(0.01/dt)
+rate_std = 2.74409187e-04 * np.sqrt(0.01/dt)
 # Bias values
 # acc_bias_driving_noise_std = 4e-3
 # cont_acc_bias_driving_noise_std = 6 * \
@@ -65,7 +65,7 @@ rate_std = 2.74409187e-04 / np.sqrt(0.01/dt)
 cont_acc_bias_driving_noise_std = 1.48610933e-03 / np.sqrt(0.01/dt)
 cont_rate_bias_driving_noise_std = 5.62468004e-04 / np.sqrt(0.01/dt)
 # Position and velocity measurement
-p_std = np.array([0.3887816, 0.3887816, 0.51122025])  # Measurement noise
+p_std = np.array([0.21964537, 0.21964537, 0.42969898])  # Measurement noise
 
 
 p_acc = 1e-9
@@ -77,6 +77,8 @@ eskf_parameters = [acc_std,
                    cont_rate_bias_driving_noise_std,
                    p_acc,
                    p_gyro]
+eskf_parameters = [5.04448147e-01, 2.49126377e-02, 9.18096950e-03, 2.47979086e-02,
+                   1.00000003e-09, 9.99592691e-10]
 # %% Initialise
 x_pred_init = np.zeros(16)
 x_pred_init[POS_IDX] = np.array([0, 0, 0])
@@ -91,25 +93,27 @@ x_pred_init[6] = 1
 
 # These have to be set reasonably to get good results
 
-P_pred_init_pos = 10
-P_pred_init_vel = 3
-P_pred_init_err_att = (np.pi/30)
-P_pred_init_err_acc_bias = 0.05
-P_pred_init_err_gyro_bias = (1e-3)
+P_pred_init_pos = 0.584566
+P_pred_init_vel = 0.78118225
+P_pred_init_err_att = 0.00114295
+P_pred_init_err_acc_bias = 0.02167314
+P_pred_init_err_gyro_bias = 0.00939913
 P_pred_init_list = [P_pred_init_pos,
                     P_pred_init_vel,
                     P_pred_init_err_att,
                     P_pred_init_err_acc_bias,
                     P_pred_init_err_gyro_bias]
 
+P_pred_init_list = [9.00092551,  1.90877762,
+                    0.30766943, -0.01647567, -0.26391407]
 
 init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
 
-N: int = int(30/dt)
+N: int = int(120/dt)
 # N: int = timeIMU.size
-offset = 206.
+offset = 207.
 doGNSS: bool = True
 
 
