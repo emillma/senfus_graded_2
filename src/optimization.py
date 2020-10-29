@@ -27,8 +27,8 @@ def cost_function_NIS(tunables, *args):
         P_pos = P_est[:, :3]
 
         cost_NIS = np.mean(np.log(NIS[:, 1])**2)
-        cost_covarianve_pos = 0.001 * np.mean(np.sum(P_pos * P_pos, axis=1))
-        cost_bias = 1e6 * np.mean(np.sum(bias * bias, axis=1))
+        cost_covarianve_pos = 1e-4 * np.mean(np.sum(P_pos * P_pos, axis=1))
+        cost_bias = 1e4 * np.mean(np.sum(bias * bias, axis=1))
         cost = cost_NIS + cost_covarianve_pos + cost_bias
 
         with open('optimization.txt', 'a') as file:

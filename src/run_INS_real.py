@@ -65,7 +65,7 @@ rate_std = 2.74409187e-04 * np.sqrt(0.01/dt)
 cont_acc_bias_driving_noise_std = 1.48610933e-03 / np.sqrt(0.01/dt)
 cont_rate_bias_driving_noise_std = 5.62468004e-04 / np.sqrt(0.01/dt)
 # Position and velocity measurement
-p_std = np.array([0.21964537, 0.21964537, 0.42969898])  # Measurement noise
+p_std = np.array([0.3381298,  0.3381298,  0.29644852])  # Measurement noise
 
 
 p_acc = 1e-9
@@ -77,8 +77,8 @@ eskf_parameters = [acc_std,
                    cont_rate_bias_driving_noise_std,
                    p_acc,
                    p_gyro]
-eskf_parameters = [5.04448147e-01, 2.49126377e-02, 9.18096950e-03, 2.47979086e-02,
-                   1.00000003e-09, 9.99592691e-10]
+eskf_parameters = [8.43236174e-01, 5.60187540e-02, 2.21515504e-02, 5.02801377e-02,
+                   1.00000000e-09, 1.00100939e-09]
 # %% Initialise
 x_pred_init = np.zeros(16)
 x_pred_init[POS_IDX] = np.array([0, 0, 0])
@@ -104,14 +104,14 @@ P_pred_init_list = [P_pred_init_pos,
                     P_pred_init_err_acc_bias,
                     P_pred_init_err_gyro_bias]
 
-P_pred_init_list = [9.00092551,  1.90877762,
-                    0.30766943, -0.01647567, -0.26391407]
+P_pred_init_list = [3.25254052,  3.84808036,
+                    0.43197787,  0.01734291, -0.29377767]
 
 init_parameters = [x_pred_init, P_pred_init_list]
 
 # %% Run estimation
 
-N: int = int(120/dt)
+N: int = int(300/dt)
 # N: int = timeIMU.size
 offset = 207.
 doGNSS: bool = True
