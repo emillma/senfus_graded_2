@@ -7,6 +7,7 @@ import functools
 
 
 def cost_function_NIS(tunables, *args):
+    tunables[7] = np.amax(tunables[6:8])
     tunables = tunables.copy()
     eskf_parameters = tunables[:6]
     # eskf_parameters = np.append(eskf_parameters, args[0])
