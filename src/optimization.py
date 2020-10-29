@@ -20,20 +20,22 @@ def cost_function_NIS(tunables, *args):
                           p_std, N, offset=offset,
                           use_GNSSaccuracy=use_GNSSaccuracy)
         # delta_x = result[3]
-
+        x_pred = result[0]
+        bias = x_pred[:, -6:]
         NIS = result[4]
         P_est = result[4]
         P_pos = P_est[:, :3]
 
         cost_NIS = np.mean(np.log(NIS[:, 1])**2)
-        cost_covarianve_pos = np.mean(np.sum(P_pos * P_pos, axis=1))
-        cost = cost_NIS
+        cost_covarianve_pos = 1e-4 * np.mean(np.sum(P_pos * P_pos, axis=1))
+        cost_bias = 1e4 * np.mean(np.sum(bias * bias, axis=1))
+        cost = cost_NIS + cost_covarianve_pos + cost_bias
 
         with open('optimization.txt', 'a') as file:
             text = (f'eskf_parameters: {eskf_parameters}\n'
                     f'gps_parameters: {p_std}\n'
                     f'init_P_parameters: {P_pred_init_list}\n'
-                    f'{cost_NIS}, {cost_covarianve_pos}\n'
+                    f'{cost_NIS}, {cost_covarianve_pos}, {cost_bias}\n'
                     f'{cost}\n\n')
             file.write(text)
             print(text)
@@ -59,7 +61,6 @@ def cost_function_SIM(tunables, *args):
                           p_std, N, offset=offset,
                           use_GNSSaccuracy=use_GNSSaccuracy)
         # delta_x = result[3]
-
         NIS = result[4]
         NEES_list = result[6:11]
 
