@@ -65,7 +65,7 @@ rate_std = 2.74409187e-04 * np.sqrt(0.01/dt)
 cont_acc_bias_driving_noise_std = 1.48610933e-03 / np.sqrt(0.01/dt)
 cont_rate_bias_driving_noise_std = 5.62468004e-04 / np.sqrt(0.01/dt)
 # Position and velocity measurement
-p_std = np.array([.23194955, 0.23194955, 0.28194955])  # Measurement noise
+p_std = np.array([0.10614235, 0.10614235, 0.1061424])  # Measurement noise
 
 
 p_acc = 1e-9
@@ -77,8 +77,8 @@ eskf_parameters = [acc_std,
                    cont_rate_bias_driving_noise_std,
                    p_acc,
                    p_gyro]
-eskf_parameters = [7.98615097e-01, 4.58130821e-03, 6.76991159e-03, 1.41200936e-02,
-                   1.00000036e-09, 1.00100975e-09]
+eskf_parameters = [5.59887024e-01, 1.16727905e-03, 6.70062772e-04, 1.80454915e-02,
+                   1.42293717e-09, 1.93957163e-09]
 # %% Initialise
 x_pred_init = np.zeros(16)
 x_pred_init[POS_IDX] = np.array([0, 0, 0])
@@ -104,8 +104,8 @@ P_pred_init_list = [P_pred_init_pos,
                     P_pred_init_err_acc_bias,
                     P_pred_init_err_gyro_bias]
 
-P_pred_init_list = [3.25262887,  3.84903053,
-                    0.43129972, -0.01292624, -0.26946564]
+P_pred_init_list = [3.10976674, 3.82838086,
+                    0.37167027, -0.00466379, -0.00782738]
 
 init_parameters = [x_pred_init, P_pred_init_list]
 
