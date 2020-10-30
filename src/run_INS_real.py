@@ -77,7 +77,7 @@ eskf_parameters = [acc_std,
                    cont_rate_bias_driving_noise_std,
                    p_acc,
                    p_gyro]
-eskf_parameters = [5.59887024e-01, 1.16727905e-03, 6.70062772e-04, 1.80454915e-02,
+eskf_parameters = [1.59887024e-01, 1.16727905e-03, 6.70062772e-04, 1.80454915e-02,
                    1.42293717e-09, 1.93957163e-09]
 # %% Initialise
 x_pred_init = np.zeros(16)
