@@ -21,8 +21,8 @@ def run_eskf(eskf_parameters, x_pred_init, P_pred_init_list, loaded_data,
     S_a = loaded_data["S_a"]
     S_g = loaded_data["S_g"]
 
-    S_a = np.round(S_a)
-    S_g = np.round(S_g)
+    # S_a = np.round(S_a)
+    # S_g = np.round(S_g)
 
     lever_arm = loaded_data["leverarm"].ravel()
     timeGNSS = loaded_data["timeGNSS"].ravel()

@@ -88,6 +88,7 @@ x_pred_init[ATT_IDX] = np.array([
     0, 0,
     np.sin(45 * np.pi / 180)
 ])
+
 # no initial rotation: nose to North, right to East, and belly down
 x_pred_init[6] = 1
 
